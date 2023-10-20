@@ -31,7 +31,7 @@ app.get('/getID', async (req, res) => {
     //Puppeteer remplit les champs de login
     await page.type("#username", username);
     await page.type("#password", password);
-    //Puppeteer clique sur le bouton de login
+    //Puppeteer clique sur le bouton de validation
     await page.click('input.btn.btn-submit');
     await page.waitForSelector('div.fc-title'); 
     //Puppeteer récupère le contenu de la page 
