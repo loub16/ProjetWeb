@@ -3,7 +3,29 @@
 <body>
 
 <h1>EdTransport</h1>
+<script>
+    async function run() {
+        //encodage des paramètres pour l'URL
+        var username = encodeURIComponent('username');
+        var password = encodeURIComponent('password');
 
+        try {
+            //appel de l'API de l'application
+            const response = await fetch(`http://localhost:3000/getID?username=${username}&password=${password}`, {
+                method: 'GET',
+            });
 
+            if (response.ok) {
+                const result = await response.text();
+                console.log("id : ", result);
+            } else {
+                console.error('Failed to execute Puppeteer action');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+    run();
+</script>
 </body>
 </html>
