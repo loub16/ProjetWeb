@@ -49,15 +49,15 @@ app.get('/getID', async (req, res) => {
 });
 
 app.get('/getEdt', async (req, res) => {
-  const { id, datedebut, datefin } = req.query;
+  const id = req.query.id;
+  const datedebut = req.query.dateDebut;
+  const datefin = req.query.dateFin;
   try {
     const response = await fetch(`https://edt.univ-angers.fr/edt/jsonSemaine?id=${id}&dateDebut=${datedebut}&dateFin=${datefin}`,
       {
         method: 'POST'
       });
-      console.log("url : " + `https://edt.univ-angers.fr/edt/jsonSemaine?id=${id}&dateDebut=${datedebut}&dateFin=${datefin}`);
     const data = await response.json();
-    console.log("response : " + response.json());
     res.json(data);
 
   } catch (error) {

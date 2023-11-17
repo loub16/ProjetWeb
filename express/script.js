@@ -16,7 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const id = await getId(username, password);
             resultElement.textContent = 'ID : ' + id;
-            const edt = await getEdt(id, "20231016", "20231022");
+
+            //get the first and last day of the week in two variables
+            const [firstday, lastday] = getFirstAndLastDayOfWeek();
+            const edt = await getEdt(id, firstday, lastday);
         } catch (error) {
             console.error(error);
             resultElement.textContent = 'Failed to get ID, check your username and password.';
@@ -51,7 +54,6 @@ async function getEdt(id, datedebut, datefin) {
         const response = fetch(`/getEdt?id=${id}&dateDebut=${datedebut}&dateFin=${datefin}`);
 
         if (response.ok) {
-            console.log("response : " + response.json());
             return response.json();
         } else {
             return 'Failed to get edt.';
@@ -62,4 +64,15 @@ async function getEdt(id, datedebut, datefin) {
 
 }
 
+//Get the first day and last day of the week in format : YYYYMMDD
+function getFirstAndLastDayOfWeek() {
+    var curr = new Date();
+    var first = curr.getDate() - curr.getDay() + 1;
+    var last = first + 6;
 
+    // Create new Date objects for firstday and lastday
+    var firstday = new Date(curr.setDate(first)).toISOString().slice(0, 10).replace(/-/g, "");
+    curr = new Date(); // Reset curr to the current date
+    var lastday = new Date(curr.setDate(last)).toISOString().slice(0, 10).replace(/-/g, "");
+    return [firstday, lastday];
+}
