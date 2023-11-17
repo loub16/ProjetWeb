@@ -3,44 +3,63 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultElement = document.getElementById('result');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
-  
+
     executeButton.addEventListener('click', async () => {
-      try {
-        const username = usernameInput.value;
-        const password = passwordInput.value;
-        
-        if (!username || !password) {
-          resultElement.textContent = 'Please enter both username and password.';
-          return;
+        try {
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+
+            if (!username || !password) {
+                resultElement.textContent = 'Please enter both username and password.';
+                return;
+            }
+
+            const id = await getId(username, password);
+            resultElement.textContent = 'ID : ' + id;
+            const edt = await getEdt(id, "20231016", "20231022");
+        } catch (error) {
+            console.error(error);
+            resultElement.textContent = 'Failed to get ID, check your username and password.';
         }
-  
-        const id = await getId(username, password);
-        resultElement.textContent = 'ID : ' + id;
-      } catch (error) {
-        console.error(error);
-        resultElement.textContent = 'Failed to get ID, check your username and password.';
-      }
     });
-  });
-  
-  async function getId(username, password) {
+});
+
+async function getId(username, password) {
     try {
-      const encodedUsername = encodeURIComponent(username);
-      const encodedPassword = encodeURIComponent(password);
-  
-      const response = await fetch(`http://localhost:3000/getID?username=${encodedUsername}&password=${encodedPassword}`, {
-        method: 'GET',
-      });
-  
-      if (response.ok) {
-        const id = await response.text();
-        return id;
-      } else {
-        console.error('Failed to execute Puppeteer action');
-        return 'Failed to get ID, check your username and password.';
-      }
+        //encodage des paramètres pour l'URL
+        const encodedUsername = encodeURIComponent(username);
+        const encodedPassword = encodeURIComponent(password);
+
+        const response = await fetch(`/getID?username=${encodedUsername}&password=${encodedPassword}`, {
+            method: 'GET',
+        });
+
+        if (response.ok) {
+            return response.text();
+        } else {
+            console.error('Failed to execute Puppeteer action');
+            return 'Failed to get ID, check your username and password.';
+        }
     } catch (error) {
-      console.error(error);
+        console.error(error);
     }
-  }
-  
+}
+
+async function getEdt(id, datedebut, datefin) {
+    try {
+        //recuperation de l'edt
+        const response = fetch(`/getEdt?id=${id}&dateDebut=${datedebut}&dateFin=${datefin}`);
+
+        if (response.ok) {
+            console.log("response : " + response.json());
+            return response.json();
+        } else {
+            return 'Failed to get edt.';
+        }
+    } catch (error) {
+        console.error(error);
+    }
+
+}
+
+
