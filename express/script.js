@@ -17,11 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = await getId(username, password);
             resultElement.textContent = 'ID : ' + id;
 
-            //get the first and last day of the week in two variables
             const [firstday, lastday] = getFirstAndLastDayOfWeek();
-            //get the edt of the week
             const edt = await getEdt(id, firstday, lastday);
-            //get the last lesson hour of the day
             const lastLessonHour = getLastLessonHour(edt);
             resultElement.textContent = "Heure de fin des cours d'aujourd'hui : " + lastLessonHour;
         } catch (error) {
@@ -31,9 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+/** Get the ID of a student based on the login and password
+ * @param {string} username
+ * @param {string} password
+ * @returns {string} the ID of the student
+*/
 async function getId(username, password) {
     try {
-        //encodage des paramètres pour l'URL
         const encodedUsername = encodeURIComponent(username);
         const encodedPassword = encodeURIComponent(password);
 
@@ -52,19 +53,26 @@ async function getId(username, password) {
     }
 }
 
+/** Get the timetable of a student in JSON format
+ * @param {string} id The ID of the student
+ * @param {string} datedebut date of the first day of the current week
+ * @param {string} datefin date of the last day of the current week
+ * @returns {JSON} the timetable in JSON
+ * */
 async function getEdt(id, datedebut, datefin) {
     try {
-        //recuperation de l'edt
         const response = await fetch(`/getEdt?id=${id}&dateDebut=${datedebut}&dateFin=${datefin}`);
         const edt = await response.json();
-        return edt
+        return edt;
     } catch (error) {
         console.error(error);
     }
 
 }
 
-//Get the first day and last day of the week in format : YYYYMMDD
+/** Get the first and last day of the current week
+ * @returns {Array} the first and last day in an array in format : YYYYMMDD
+ * */
 function getFirstAndLastDayOfWeek() {
     var curr = new Date();
     var first = curr.getDate() - curr.getDay() + 1;
@@ -77,6 +85,10 @@ function getFirstAndLastDayOfWeek() {
     return [firstday, lastday];
 }
 
+/** Get the hour of the end of the last lesson of the day
+ * @param {JSON} json The JSON of the timetable
+ * @returns {string} the hour in format : HH:MM:SS
+ * */
 function getLastLessonHour(json){
     let lastHour = "";
     
