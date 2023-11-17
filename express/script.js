@@ -19,7 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             //get the first and last day of the week in two variables
             const [firstday, lastday] = getFirstAndLastDayOfWeek();
+            //get the edt of the week
             const edt = await getEdt(id, firstday, lastday);
+            //get the last lesson hour of the day
+            const lastLessonHour = getLastLessonHour(edt);
+            resultElement.textContent = "Heure de fin des cours d'aujourd'hui : " + lastLessonHour;
         } catch (error) {
             console.error(error);
             resultElement.textContent = 'Failed to get ID, check your username and password.';
@@ -51,13 +55,9 @@ async function getId(username, password) {
 async function getEdt(id, datedebut, datefin) {
     try {
         //recuperation de l'edt
-        const response = fetch(`/getEdt?id=${id}&dateDebut=${datedebut}&dateFin=${datefin}`);
-
-        if (response.ok) {
-            return response.json();
-        } else {
-            return 'Failed to get edt.';
-        }
+        const response = await fetch(`/getEdt?id=${id}&dateDebut=${datedebut}&dateFin=${datefin}`);
+        const edt = await response.json();
+        return edt
     } catch (error) {
         console.error(error);
     }
@@ -75,4 +75,19 @@ function getFirstAndLastDayOfWeek() {
     curr = new Date(); // Reset curr to the current date
     var lastday = new Date(curr.setDate(last)).toISOString().slice(0, 10).replace(/-/g, "");
     return [firstday, lastday];
+}
+
+function getLastLessonHour(json){
+    let lastHour = "";
+    
+    json.forEach(lesson => {
+        lesson = JSON.stringify(lesson);
+        lesson = JSON.parse(lesson);
+        const date_debut = lesson.date_debut;
+        const current_date = new Date();
+        if (date_debut.slice(0,2) == current_date.getDate() && date_debut.slice(3,5) == (current_date.getMonth() +1) && date_debut.slice(6,10) == current_date.getFullYear()){
+            lastHour = lesson.date_fin.slice(-8);
+        }
+    })
+    return lastHour;
 }
