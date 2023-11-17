@@ -19,13 +19,13 @@ app.get('/getID', async (req, res) => {
     await page.goto("https://edt.univ-angers.fr/edt/ressources?id=G9FDC055BB1B94F92E0530100007F467B");
     //Puppeteer clique sur le bouton "Mon emploi du temps"
     await page.evaluate(() => {
-        const buttons = document.querySelectorAll('article.text-center.g-color-white.g-overflow-hidden h2');
-        for (const button of buttons) {
-            if (button.textContent.trim() === 'Mon Emploi du temps') {
-                button.click();
-                break; 
-            }
+      const buttons = document.querySelectorAll('article.text-center.g-color-white.g-overflow-hidden h2');
+      for (const button of buttons) {
+        if (button.textContent.trim() === 'Mon Emploi du temps') {
+          button.click();
+          break;
         }
+      }
     });
     await page.waitForNavigation()
     //Puppeteer remplit les champs de login
@@ -33,7 +33,7 @@ app.get('/getID', async (req, res) => {
     await page.type("#password", password);
     //Puppeteer clique sur le bouton de validation
     await page.click('input.btn.btn-submit');
-    await page.waitForSelector('div.fc-title'); 
+    await page.waitForSelector('div.fc-title');
     //Puppeteer récupère le contenu de la page 
     const content = await page.content();
     //Parse du contenu pour récupérer l'id de l'étudiant
@@ -42,19 +42,38 @@ app.get('/getID', async (req, res) => {
     await browser.close();
     //Envoi de l'id dans la réponse
     res.send(id);
-  }catch (error) {
+  } catch (error) {
     console.error(error);
     res.status(500).send('Error executing Puppeteer action');
   }
 });
 
+app.get('/getEdt', async (req, res) => {
+  const id = req.query.id;
+  const datedebut = req.query.dateDebut;
+  const datefin = req.query.dateFin;
+  try {
+    const response = await fetch(`https://edt.univ-angers.fr/edt/jsonSemaine?id=${id}&dateDebut=${datedebut}&dateFin=${datefin}`,
+      {
+        method: 'POST'
+      });
+    const data = await response.json();
+    res.json(data);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error executing fetching edt');
+  }
+
+});
+
 // Affichage de la page html
-app.use('/', function(req,res){
-  res.sendFile(path.join(__dirname+'/express/index.html'));
+app.use('/', function (req, res) {
+  res.sendFile(path.join(__dirname + '/express/index.html'));
 });
 
 const server = http.createServer(app);
 const port = 3000;
 server.listen(port, () => {
-    console.debug('Server listening on port ' + port);
+  console.debug('Server listening on port ' + port);
 });
