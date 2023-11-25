@@ -1,0 +1,17 @@
+service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date
+chouette:TimeTable:b7691291-4234-486d-bd84-df2deeba8019:LOC,1,1,0,0,1,0,0,20231110,20240705
+chouette:TimeTable:8f0d736d-a219-4a6a-bc4f-27f91ec095cb:LOC,0,0,0,1,0,0,0,20231110,20240705
+chouette:TimeTable:83bb7b2d-1778-4486-8cb0-7b11f342803b:LOC,1,1,0,0,1,0,0,20231110,20240705
+chouette:TimeTable:0449ce02-32df-4f25-b825-8efcf4f11126:LOC,0,0,0,1,0,0,0,20231110,20240705
+chouette:TimeTable:933528be-47ae-49e0-a76e-9cf4cc39e618:LOC,1,1,0,0,1,0,0,20231110,20240705
+chouette:TimeTable:8fc861c5-6a58-4f7a-96bc-8b601baea929:LOC,0,0,0,1,0,0,0,20231110,20240705
+chouette:TimeTable:09c6a824-c446-4089-a0ed-9e66490d58c2:LOC,1,1,0,0,1,0,0,20231110,20240705
+chouette:TimeTable:299b57d6-3f58-4964-8cd7-15da52b44072:LOC,0,0,0,1,0,0,0,20231110,20240705
+chouette:TimeTable:6b4f507e-7e3a-4613-adca-2d6aa1467787:LOC,1,1,0,0,1,0,0,20231110,20240705
+chouette:TimeTable:1f9a2f31-0100-49f7-95f4-9a62a797bf56:LOC,0,0,0,1,0,0,0,20231110,20240705
+chouette:TimeTable:10d64aaa-2c1a-4f33-b3b0-de67519c06df:LOC,1,1,0,0,1,0,0,20231110,20240705
+chouette:TimeTable:689c5df8-4b99-4134-9141-f56bb387116c:LOC,0,0,0,1,0,0,0,20231110,20240705
+chouette:TimeTable:41beef4b-58c8-457c-b7b1-020d3c751367:LOC,1,1,1,1,1,0,0,20231110,20240705
+chouette:TimeTable:2ab37071-6e38-4dbb-b511-88bedac88de0:LOC,0,1,1,1,1,0,0,20231110,20240705
+chouette:TimeTable:6e2c3fe0-19d9-45c1-9e9d-529d5655a543:LOC,1,0,0,0,0,0,0,20231110,20240705
+chouette:TimeTable:0013c730-a069-497f-ad6a-67cfa0a05cbf:LOC,1,0,0,0,0,0,0,20231110,20240705
