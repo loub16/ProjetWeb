@@ -2,6 +2,7 @@
 
 ## Installation
 /!\ node version>=20.5.0
+
 Pour installer les dépendances :  
 
 ```npm install```
