@@ -1,5 +1,9 @@
 import puppeteer from 'puppeteer';
-
+/** Get the id of a student based on its username and password from the UA website
+ * @param {string} username The username of the student
+ * @param {string} password the password of the student
+ * @returns {string} the id of the student
+ * */
 export async function getId(username, password) {
   try {
     let browser = await puppeteer.launch();
@@ -35,6 +39,12 @@ export async function getId(username, password) {
     return id;
 }
 
+/** Get the timetable of a student based on its id and the date of the week
+ * @param {string} id The id of the student
+ * @param {string} datedebut date of the first day of the week in format : YYYYMMDD
+ * @param {string} datefin date of the last day of the week in format : YYYYMMDD
+ * @returns {JSON} the timetable in JSON
+ * */
 export async function getEdt(id, datedebut, datefin) {
     try{
         const response = await fetch(`https://edt.univ-angers.fr/edt/jsonSemaine?id=${id}&dateDebut=${datedebut}&dateFin=${datefin}`,
