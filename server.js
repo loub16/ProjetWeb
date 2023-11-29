@@ -11,6 +11,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 
+// Serve static files from the 'express' directory
+app.use(express.static(path.join(__dirname, 'express')));
 
 // Getting the ID of the user with puppeteer by logging in the edt website
 app.get('/getID', async (req, res) => {
