@@ -1,10 +1,16 @@
-const http = require('http');
-const express = require('express');
-const path = require('path');
-const puppeteer = require("puppeteer");
+import {getTransportAt} from './trajet.js';
+import  http from 'http';
+import express from 'express';
+import puppeteer from 'puppeteer';
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+
+const __dirname = path.dirname(__filename);
 const app = express();
-app.use(express.json());
-app.use(express.static("express"));
+
 
 // Getting the ID of the user with puppeteer by logging in the edt website
 app.get('/getID', async (req, res) => {
@@ -65,6 +71,11 @@ app.get('/getEdt', async (req, res) => {
     res.status(500).send('Error executing fetching edt');
   }
 
+});
+app.get('/getTransport', async (req, res) => {
+  var list=getTransportAt(req.query.arret, new Date('August 19, 1975 23:15:30')).then((value) => {
+    res.json(value)
+  })
 });
 
 // Sending the page to the client

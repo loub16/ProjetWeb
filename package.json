@@ -2,11 +2,14 @@
     "name": "node-ex-website",
     "version": "1.0.0",
     "description": "",
+    "type": "module",
     "scripts": {
         "start": "node server.js"
     },
     "dependencies": {
+        "adm-zip": "^0.5.10",
         "express": "^4.17.1",
-        "puppeteer": "^21.4.0"
+        "gtfs-realtime-bindings": "^1.1.1",
+        "puppeteer": "^21.5.2"
     }
 }
