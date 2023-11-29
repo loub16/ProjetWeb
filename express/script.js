@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const [firstday, lastday] = getFirstAndLastDayOfWeek();
             const edt = await getEdt(id, firstday, lastday);
-            const lastLessonHour = getLastLessonHour(edt);
+            const lastLessonHour = getLastLessonHour(edt,'29/11/2023');
             resultElement.textContent = "Heure de fin des cours d'aujourd'hui : " + lastLessonHour;
         } catch (error) {
             console.error(error);
@@ -87,18 +87,24 @@ function getFirstAndLastDayOfWeek() {
 
 /** Get the hour of the end of the last lesson of the day
  * @param {JSON} json The JSON of the timetable
+ * @param {string} date The date of the day to get the last lesson of in format : HH:MM:SS
  * @returns {string} the hour in format : HH:MM:SS
  * */
-function getLastLessonHour(json){
+function getLastLessonHour(json, date){
     let lastHour = "";
     
     json.forEach(lesson => {
         lesson = JSON.stringify(lesson);
         lesson = JSON.parse(lesson);
         const date_debut = lesson.date_debut;
-        const current_date = new Date();
-        if (date_debut.slice(0,2) == current_date.getDate() && date_debut.slice(3,5) == (current_date.getMonth() +1) && date_debut.slice(6,10) == current_date.getFullYear()){
-            lastHour = lesson.date_fin.slice(-8);
+        const date_day = date.slice(0,2);
+        const date_month = date.slice(3,5);
+        const date_year = date.slice(6,10);
+        if (date_debut.slice(0,2) == date_day && date_debut.slice(3,5) == date_month && date_debut.slice(6,10) == date_year){
+            if (lesson.date_fin.slice(-8) > lastHour){
+                lastHour = lesson.date_fin.slice(-8);
+            }
+            
         }
     })
     return lastHour;
