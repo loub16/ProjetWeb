@@ -1,19 +1,23 @@
-const searchParams = new URLSearchParams(window.location.search);
-const id = searchParams.get('id');
-const [firstday, lastday] = getFirstAndLastDayOfCurrentWeek();
-const edt = await getEdt(id, firstday, lastday);
-const lastLessonHour = getLastLessonHour(edt, '29/11/2023');
-resultElement.textContent = "Heure de fin des cours d'aujourd'hui : " + lastLessonHour;
+document.addEventListener('DOMContentLoaded', async () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const id = searchParams.get('id');
+    const [firstday, lastday] = getFirstAndLastDayOfCurrentWeek();
+    const edt = await fetchEdt(id, firstday, lastday);
+    const lastLessonHour = getLastLessonHour(edt, getFormattedDate());
+
+    // JavaScript pour mettre à jour la page
+    document.getElementById('date').textContent = formatDate(new Date());
+    document.getElementById('heureCours').textContent = lastLessonHour;
+});
 
 
-
-/** Get the timetable of a student in JSON format from the server
+/** Fetch the timetable of a student in JSON format from the server
  * @param {string} id The ID of the student
  * @param {string} datedebut date of the first day of the current week
  * @param {string} datefin date of the last day of the current week
  * @returns {JSON} the timetable in JSON
  * */
-async function getEdt(id, datedebut, datefin) {
+async function fetchEdt(id, datedebut, datefin) {
     try {
         const response = await fetch(`/getEdt?id=${id}&dateDebut=${datedebut}&dateFin=${datefin}`);
         const edt = await response.json();
@@ -79,4 +83,23 @@ function getLastLessonHour(json, date) {
         }
     })
     return lastHour;
+}
+
+function formatDate(date) {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('fr-FR', options);
+}
+
+function getFormattedDate() {
+    const today = new Date();
+
+    // Get day, month, and year
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // Month is zero-based, so we add 1
+    const year = today.getFullYear();
+
+    // Create the formatted date string
+    const formattedDate = `${day}/${month}/${year}`;
+
+    return formattedDate;
 }
