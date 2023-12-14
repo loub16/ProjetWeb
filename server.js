@@ -24,7 +24,6 @@ app.get('/getID', async (req, res) => {
     const id = await getId(username, password);
     res.send(id);
   } catch (error) {
-    console.error(error);
     res.status(500).send('Error executing Puppeteer action');
   }
 });
