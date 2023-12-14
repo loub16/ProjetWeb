@@ -1,57 +1,11 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const executeButton = document.getElementById('executeButton');
-    const resultElement = document.getElementById('result');
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
+const searchParams = new URLSearchParams(window.location.search);
+const id = searchParams.get('id');
+const [firstday, lastday] = getFirstAndLastDayOfCurrentWeek();
+const edt = await getEdt(id, firstday, lastday);
+const lastLessonHour = getLastLessonHour(edt, '29/11/2023');
+resultElement.textContent = "Heure de fin des cours d'aujourd'hui : " + lastLessonHour;
 
-    executeButton.addEventListener('click', async () => {
-        try {
-            const username = usernameInput.value;
-            const password = passwordInput.value;
 
-            if (!username || !password) {
-                resultElement.textContent = 'Please enter both username and password.';
-                return;
-            }
-
-            const id = await getId(username, password);
-            resultElement.textContent = 'ID : ' + id;
-
-            const [firstday, lastday] = getFirstAndLastDayOfCurrentWeek();
-            const edt = await getEdt(id, firstday, lastday);
-            const lastLessonHour = getLastLessonHour(edt,'29/11/2023');
-            resultElement.textContent = "Heure de fin des cours d'aujourd'hui : " + lastLessonHour;
-        } catch (error) {
-            console.error(error);
-            resultElement.textContent = 'Failed to get ID, check your username and password.';
-        }
-    });
-});
-
-/** Get the ID of a student based on the login and password from the server
- * @param {string} username
- * @param {string} password
- * @returns {string} the ID of the student
-*/
-async function getId(username, password) {
-    try {
-        const encodedUsername = encodeURIComponent(username);
-        const encodedPassword = encodeURIComponent(password);
-
-        const response = await fetch(`/getID?username=${encodedUsername}&password=${encodedPassword}`, {
-            method: 'GET',
-        });
-
-        if (response.ok) {
-            return response.text();
-        } else {
-            console.error('Failed to execute Puppeteer action');
-            return 'Failed to get ID, check your username and password.';
-        }
-    } catch (error) {
-        console.error(error);
-    }
-}
 
 /** Get the timetable of a student in JSON format from the server
  * @param {string} id The ID of the student
@@ -107,21 +61,21 @@ function getFirstAndLastDayOfAnyWeek(date) {
  * @param {string} date The date of the day to get the last lesson of in format : DD/MM/YYYY
  * @returns {string} the hour in format : HH:MM:SS
  * */
-function getLastLessonHour(json, date){
+function getLastLessonHour(json, date) {
     let lastHour = "";
-    
+
     json.forEach(lesson => {
         lesson = JSON.stringify(lesson);
         lesson = JSON.parse(lesson);
         const date_debut = lesson.date_debut;
-        const date_day = date.slice(0,2);
-        const date_month = date.slice(3,5);
-        const date_year = date.slice(6,10);
-        if (date_debut.slice(0,2) == date_day && date_debut.slice(3,5) == date_month && date_debut.slice(6,10) == date_year){
-            if (lesson.date_fin.slice(-8) > lastHour){
+        const date_day = date.slice(0, 2);
+        const date_month = date.slice(3, 5);
+        const date_year = date.slice(6, 10);
+        if (date_debut.slice(0, 2) == date_day && date_debut.slice(3, 5) == date_month && date_debut.slice(6, 10) == date_year) {
+            if (lesson.date_fin.slice(-8) > lastHour) {
                 lastHour = lesson.date_fin.slice(-8);
             }
-            
+
         }
     })
     return lastHour;

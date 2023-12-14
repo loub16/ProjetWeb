@@ -32,11 +32,11 @@ export async function getId(username, password) {
     var id = content.split("webcal://edt.univ-angers.fr/edt/ics?id=")[1]
     id = id.split("<")[0]
     await browser.close();
+    return id;
   } catch (error) {
     console.error(error);
-    return 'Failed to get ID, check your username and password.';
+    throw new Error('Failed to execute Puppeteer action');
   }
-    return id;
 }
 
 /** Get the timetable of a student based on its id and the date of the week

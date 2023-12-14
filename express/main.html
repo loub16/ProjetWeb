@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDTransport</title>
+</head>
+<body>
+    <h1>EDTransport</h1>
+    <p>Aujourd'hui : <span id="date"></span></p>
+    <p>Fini à : <span id="heureCours"></span></p>
+    
+    <p>A Notre Dame du Lac : <span id="heureNDL"></span></p>
+    <p>A Beaussier : <span id="heureB"></span></p>
+
+    <script>
+        // JavaScript pour mettre à jour la date actuelle
+        document.getElementById('date').textContent = formatDate(new Date());
+
+        function formatDate(date) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('fr-FR', options);
+        }
+    </script>
+</body>
+</html>
