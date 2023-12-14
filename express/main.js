@@ -84,12 +84,19 @@ function getLastLessonHour(json, date) {
     })
     return lastHour;
 }
-
+/** Format the date in the french format
+ * 
+ * @param {Date} date date to format
+ * @returns formatted date
+ */
 function formatDate(date) {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     return date.toLocaleDateString('fr-FR', options);
 }
 
+/** Get the current date in dd/mm/yyyy format
+ * @returns formatted date (string) in format dd/mm/yyyy
+ */
 function getFormattedDate() {
     const today = new Date();
 
