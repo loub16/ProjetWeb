@@ -3,8 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultElement = document.getElementById('result');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
+    hideLoadingSpinner();
 
     executeButton.addEventListener('click', async () => {
+        showLoadingSpinner();
 
         const username = usernameInput.value;
         const password = passwordInput.value;
@@ -17,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = await fetchId(username, password);
         if (id === undefined) {
             resultElement.textContent = 'Failed to get ID, check your username and password.';
+            hideLoadingSpinner();
             return;
         } else {
             window.location.href = "main.html?id=" + id;
@@ -47,5 +50,17 @@ async function fetchId(username, password) {
     } catch (error) {
         console.error(error);
     }
+}
+
+// Function to show the loading spinner
+function showLoadingSpinner() {
+    document.getElementById('loading-spinner').style.display = 'block';
+    executeButton.disabled = true;
+}
+
+// Function to hide the loading spinner
+function hideLoadingSpinner() {
+    document.getElementById('loading-spinner').style.display = 'none';
+    executeButton.disabled = false;
 }
 
