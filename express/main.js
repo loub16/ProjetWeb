@@ -4,10 +4,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const [firstday, lastday] = getFirstAndLastDayOfCurrentWeek();
     const edt = await fetchEdt(id, firstday, lastday);
     const lastLessonHour = getLastLessonHour(edt, getFormattedDate());
-
-    // JavaScript pour mettre à jour la page
     document.getElementById('date').textContent = formatDate(new Date());
     document.getElementById('heureCours').textContent = lastLessonHour;
+    
+    const bus = await fetchTransport("bus",lastLessonHour);
+    const busHour = getBusHour(bus);
+    document.getElementById('heure2').textContent = busHour[0];
+    document.getElementById('heure6').textContent = busHour[1];
+
+    const tram = await fetchTransport("tram",lastLessonHour);
+    const tramHour = getTramHour(tram);
+    document.getElementById('heureB').textContent = tramHour[0];
+    document.getElementById('heureC').textContent = tramHour[1];
+
 });
 
 
@@ -79,7 +88,6 @@ function getLastLessonHour(json, date) {
             if (lesson.date_fin.slice(-8) > lastHour) {
                 lastHour = lesson.date_fin.slice(-8);
             }
-
         }
     })
     return lastHour;
@@ -109,4 +117,69 @@ function getFormattedDate() {
     const formattedDate = `${day}/${month}/${year}`;
 
     return formattedDate;
+}
+
+function dateToTimestamp(date) {
+    const currentDate = new Date();
+    dateSplit = date.split(':');
+
+    currentDate.setHours(dateSplit[0]);
+    currentDate.setMinutes(dateSplit[1]);
+    currentDate.setSeconds(dateSplit[2]);
+    currentDate.setMilliseconds(0);
+
+    // Get the timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)
+    const timestamp = currentDate.getTime();
+    return timestamp;
+}
+
+async function fetchTransport(transport, lessonHour){
+    try {
+        arret = (transport === "bus") ? "NDAMELAC" : "1BEAU";
+        const response = await fetch('http://localhost:3000/getTransport?arret=' + arret + '&heure=' + dateToTimestamp(lessonHour));
+        const bus = await response.json();
+        return bus;
+    }catch (error) {
+        console.error(error);
+    }
+}
+
+function getBusHour(transport){
+    
+    var busTime2 = 0;
+    var busTime6 = 0;
+    for (var key in transport) {
+        if (transport.hasOwnProperty(key)) {
+            if ((busTime2 == 0 || busTime2 > transport[key].arrival.time) && transport[key].routeId == "02" ) {
+                busTime2 = transport[key].arrival.time;
+            }else if((busTime6 == 0 || busTime6 > transport[key].arrival.time) && transport[key].routeId == "06"){
+                busTime6 = transport[key].arrival.time;
+            }
+        }
+    }
+    busTime2 = new Date(parseInt(busTime2, 10)*1000)
+    busTime2 = busTime2.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });  
+    busTime6 = new Date(parseInt(busTime6, 10)*1000)
+    busTime6 = busTime6.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); 
+    return [busTime2,busTime6];
+}
+
+function getTramHour(transport){
+    
+    var tramTimeB = 0;
+    var tramTimeC = 0;
+    for (var key in transport) {
+        if (transport.hasOwnProperty(key)) {
+            if ((tramTimeB == 0 || tramTimeB > transport[key].arrival.time) && transport[key].routeId == "B") {
+                tramTimeB = transport[key].arrival.time;
+            }else if((tramTimeC == 0 || tramTimeC > transport[key].arrival.time) && transport[key].routeId == "C"){
+                tramTimeC = transport[key].arrival.time;
+            }
+        }
+    }
+    tramTimeB = new Date(parseInt(tramTimeB, 10)*1000)
+    tramTimeB = tramTimeB.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });  
+    tramTimeC = new Date(parseInt(tramTimeC, 10)*1000)
+    tramTimeC = tramTimeC.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });  
+    return [tramTimeB,tramTimeC];
 }

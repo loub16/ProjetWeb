@@ -43,7 +43,7 @@ app.get('/getEdt', async (req, res) => {
 
 });
 app.get('/getTransport', async (req, res) => {
-  var list=getTransportAt(req.query.arret, new Date('2023-12-17 15:30:00')).then((value) => {
+  var list=getTransportAt(req.query.arret, new Date(parseInt(req.query.heure,10))).then((value) => {
     res.json(value)
   })
 });
