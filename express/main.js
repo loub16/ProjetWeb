@@ -1,19 +1,25 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // Get the id of the student from the url
     const searchParams = new URLSearchParams(window.location.search);
     const id = searchParams.get('id');
+    // Get the timetable of the student
     const [firstday, lastday] = getFirstAndLastDayOfCurrentWeek();
     const edt = await fetchEdt(id, firstday, lastday);
+    // Get the last lesson of the day
     const lastLessonHour = getLastLessonHour(edt, getFormattedDate());
+    // Display the last lesson of the day
     document.getElementById('date').textContent = formatDate(new Date());
     document.getElementById('heureCours').textContent = lastLessonHour;
-    
+    // Get the next bus of line 2 and 6 based on the hour of the last lesson
     const bus = await fetchTransport("bus",lastLessonHour);
     const busHour = getBusHour(bus);
+    // Display the next bus of line 2 and 6
     document.getElementById('heure2').textContent = busHour[0];
     document.getElementById('heure6').textContent = busHour[1];
-
+    // Get the next tram of line B and C based on the hour of the last lesson
     const tram = await fetchTransport("tram",lastLessonHour);
     const tramHour = getTramHour(tram);
+    // Display the next tram of line B and C
     document.getElementById('heureB').textContent = tramHour[0];
     document.getElementById('heureC').textContent = tramHour[1];
 
@@ -58,7 +64,6 @@ function getFirstAndLastDayOfCurrentWeek() {
  * */
 function getFirstAndLastDayOfAnyWeek(date) {
     var date = new Date(date);
-    console.log("date : " + date)
     var first = date.getDate() - date.getDay() + 1;
     var last = first + 6;
 
@@ -92,8 +97,8 @@ function getLastLessonHour(json, date) {
     })
     return lastHour;
 }
+
 /** Format the date in the french format
- * 
  * @param {Date} date date to format
  * @returns formatted date
  */
@@ -119,6 +124,10 @@ function getFormattedDate() {
     return formattedDate;
 }
 
+/** Convert a date in a timesamp
+ * @param {string} date date to convert in format HH:MM:SS
+ * @returns timestamp (int)
+ */
 function dateToTimestamp(date) {
     const currentDate = new Date();
     dateSplit = date.split(':');
@@ -132,7 +141,11 @@ function dateToTimestamp(date) {
     const timestamp = currentDate.getTime();
     return timestamp;
 }
-
+/** Fetch the transport trips at a given hour from the server
+ * @param {string} transport "bus" or "tram" the transport to get the hour of
+ * @param {string} lessonHour date to format HH:MM:SS the hour of the lesson
+ * @returns json of the transport at the hour of the lesson
+ */
 async function fetchTransport(transport, lessonHour){
     try {
         arret = (transport === "bus") ? "NDAMELAC" : "1BEAU";
@@ -144,6 +157,10 @@ async function fetchTransport(transport, lessonHour){
     }
 }
 
+/** Get the next bus of line 2 and 6
+ * @param {JSON} transport json of the transport at the hour of the lesson
+ * @returns array of the next bus of line 2 and 6
+ */
 function getBusHour(transport){
     
     var busTime2 = 0;
@@ -164,6 +181,10 @@ function getBusHour(transport){
     return [busTime2,busTime6];
 }
 
+/** Get the next tram of line B and C
+ * @param {JSON} transport json of the transport at the hour of the lesson
+ * @returns array of the next tram of line B and C
+ */
 function getTramHour(transport){
     
     var tramTimeB = 0;
