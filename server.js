@@ -43,10 +43,7 @@ app.get('/getEdt', async (req, res) => {
 
 });
 app.get('/getTransport', async (req, res) => {
-  console.log("date depart",req.query.datedepart)
-  console.log("arret",req.query.arret)
-  console.log("nbparligne",req.query.nbparligne)
-  var list=getTransportAt(req.query.arret,new Date(req.query.datedepart),req.query.nbparligne).then((value) => {
+  var list=getTransportAt(req.query.arret, new Date(parseInt(req.query.heure,10)),req.query.nbparligne).then((value) => {
     res.json(value)
   })
 });
