@@ -18,6 +18,7 @@ const decalage30 =  1800000
  * @returns {object} dictionaire contenant les informations des transports passant à l'arrêt
  * */
 export async function getTransportAt(arret, datedepart, nbParligne) {
+  datedepart=new Date(datedepart)
   const date = Date.now();
   const date30 = new Date(new Date(date).getTime() + decalage30)
   console.log("date ", datedepart.getMinutes())

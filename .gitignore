@@ -1,3 +1,4 @@
 *.log
 node_modules
-donnees
+donnees/
+node_modules/
