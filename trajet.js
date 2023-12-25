@@ -1,10 +1,11 @@
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 import fetch from "node-fetch";
 import * as fs from 'fs';
-import  AdmZip from "adm-zip";
+import AdmZip from "adm-zip";
 import path from 'path';
 import * as csvToJson from "convert-csv-to-json";
 
+const decalage30 =  1800000
 
 
 
@@ -13,21 +14,26 @@ import * as csvToJson from "convert-csv-to-json";
  * qui passeront à l'arret a l'heure de sortie, leur id de lignes et le timestamp de leur arrivée à l'arrêt
  * @param {String} arret  nom de l'arrêt
  * @param {timeSTAMP} datedepart  l'heure a laquelle l'utilisateur souhaite partir
+ * @param {int} nbParligne  nombre de transport par ligne que l'on souhaite garder
  * @returns {object} dictionaire contenant les informations des transports passant à l'arrêt
  * */
-export async function getTransportAt(arret, datedepart){
+export async function getTransportAt(arret, datedepart, nbParligne) {
   const date = Date.now();
-  const date30=new Date(new Date(date).getTime()+1800000)
+  const date30 = new Date(new Date(date).getTime() + decalage30)
+  console.log("date ", datedepart.getMinutes())
   initTrajet()
   var transports = {};
-
+  console.log("date depart dans le passé ", date > datedepart)
+  console.log("date depart dans moins de 30 min ", datedepart < date30 )
   //cas où l'heure de départ est dans le passé (ou dans moins de 30 min) on retourne les transports actuellement en circulation
-  if((date>datedepart || datedepart<date30)){
+  if (datedepart.getTime() < date30 ) {
+    console.log("RT")
 
-     transports=await getTransportAtRT(arret)
+    transports = await getTransportAtRT(arret,nbParligne)
   }
-  else{
-    transports=await getTransportAtStatic(arret, datedepart)
+  else {
+    console.log("static")
+    transports = await getTransportAtStatic(arret, datedepart,nbParligne)
   }
   return transports
 }
@@ -36,19 +42,20 @@ export async function getTransportAt(arret, datedepart){
  * fonction qui retourne {@link dict}, un dictionaire contenant l'id des transport, actuellement en circulations, 
  * passant à l'arret, leur id de lignes et le timestamp de leur arrivée à l'arrêt
  * @param {String} arret  nom de l'arrêt
+ * @param {int} nbParligne  nombre de transport par ligne que l'on souhaite garder
  * @returns {object} dictionaire contenant les informations des transports passant à l'arrêt
  * */
 
-async function  getTransportAtRT(arret){
+async function getTransportAtRT(arret, nbParligne) {
 
- /**
- * @namespace
- * @property {object}         trip                  -id du transport s'arrétant à l'arrêt
- * @property {int | string}   trip.routeId          -id de la ligne du transport
- * @property {timeSTAMP}      trip.arrival          -timestamp de l'arrivée du transport à l'arrêt
- *
- */
-var dict = {};
+  /**
+  * @namespace
+  * @property {object}         trip                  -id du transport s'arrétant à l'arrêt
+  * @property {int | string}   trip.routeId          -id de la ligne du transport
+  * @property {timeSTAMP}      trip.arrival          -timestamp de l'arrivée du transport à l'arrêt
+  *
+  */
+  var dict = {};
   try {
     //récupère le fichier gtfs-rt
     const response = await fetch("https://ara-api.enroute.mobi/irigo/gtfs/trip-updates", {
@@ -70,24 +77,25 @@ var dict = {};
       new Uint8Array(buffer)
     );
     //extrait les transport passant par l'arrêt
-    var i = 0
+    var arrivalTime
+    var datenow= Date.now()
     feed.entity.forEach((entity) => {
       if (entity.tripUpdate) {
         entity.tripUpdate.stopTimeUpdate.forEach((TimeUpdate) => {
-            if (TimeUpdate.stopId === arret) {
-              dict[entity.id] = {routeId: entity.tripUpdate.trip.routeId, arrival: TimeUpdate.arrival };
-              i++;
-            }
+          if (TimeUpdate.stopId === arret && TimeUpdate.arrival.time.low *1000> datenow) {
+            arrivalTime = new Date(TimeUpdate.arrival.time.low*1000).toLocaleTimeString()
+            dict[entity.id] = { routeId: entity.tripUpdate.trip.routeId, arrival: arrivalTime };
+          }
         })
       }
     });
     //décommenter pour exporter le fichier
-    /*const fs = require('fs');
     function saveJSON(data, filename) {
       fs.writeFileSync(`${filename}.json`, JSON.stringify(data));
     }
-    saveJSON(dict, 'output');*/
-     return dict
+    saveJSON(feed, 'output');
+    dict = extratXperLigne(dict, nbParligne)
+    return dict
   }
   catch (error) {
     console.log(error);
@@ -100,38 +108,44 @@ var dict = {};
  * passant à l'arret, leur id de lignes et le timestamp de leur arrivée à l'arrêt
  * @param {String} arret  nom de l'arrêt
  * @param {timeSTAMP} heureDepart  l'heure a laquelle on regarde les transports
+ * @param {int} nbParligne  nombre de transport par ligne que l'on souhaite garder
  * @returns {object} dictionaire contenant les informations des transports passant à l'arrêt
  * */
- async function getTransportAtStatic(arret, heureDepart){
+async function getTransportAtStatic(arret, heureDepart,nbParligne) {
 
-   /**
- * @namespace
- * @property {object}         trip                  -id du transport s'arrétant à l'arrêt
- * @property {int | string}   trip.routeId          -id de la ligne du transport
- * @property {timeSTAMP}      trip.arrival          -timestamp de l'arrivée du transport à l'arrêt
- */
+  /**
+* @namespace
+* @property {object}         trip                  -id du transport s'arrétant à l'arrêt
+* @property {int | string}   trip.routeId          -id de la ligne du transport
+* @property {string}         trip.arrival          -heure arrivée du transport à l'arrêt
+*/
 
   var dict = {}
-  console.log("hour ",new Date(heureDepart).toLocaleTimeString())
-  const dataStopTime=await csvToJson.fieldDelimiter(',').getJsonFromCsv("donnees\\trajet_static\\stop_times.csv");
-  const dataTrip= await csvToJson.fieldDelimiter(',').getJsonFromCsv("donnees\\trajet_static\\trips.csv");
+  console.log("hour ", new Date(heureDepart).toLocaleTimeString())
+  /**json contenant les info liées aux horraires des arrêt (pour le static) */
+  const dataStopTime = await csvToJson.fieldDelimiter(',').getJsonFromCsv("donnees\\trajet_static\\stop_times.csv");
+  /**json contenant les infos liées aux trajets (pour le static)*/
+  const dataTrip = await csvToJson.fieldDelimiter(',').getJsonFromCsv("donnees\\trajet_static\\trips.csv");
   var idLigne
-  const hourstring="2023-10-10 "
-  
-  var heuredep =new Date( hourstring+new Date(heureDepart).toLocaleTimeString());
+  /**modèle de date pour ne comparer que les différences d'heures et pas de date,  je json fournissant datastop time ne fournissant que des heures*/
+  const hourstring = "2023-10-10 "
+  /**temps de décalage entre le premier et dernier trajet  que l'on va considérer*/
+  const décalage = 3600000;
+  /**date de départ auquel on applique le modèle hourstring */
+  var heuredep = new Date(hourstring + new Date(heureDepart).toLocaleTimeString());
 
-  /**heure de départ prévu plus 1h */
-  var heuredep1= new Date(heureDepart.getTime()+3600000)
-  dataStopTime.forEach( (entity) => {
+  /**heure de départ prévu plus décalage*/
+  var heuredep1 = new Date(heureDepart.getTime() + décalage)
+  dataStopTime.forEach((entity) => {
 
     const datetrajet = new Date(hourstring + entity.arrival_time);
-          if (entity.stop_id === arret && datetrajet.getTime()>=heuredep.getTime() && datetrajet.getTime()<=heuredep1.getTime() ) {
-            idLigne =  getIdLigne(dataTrip,entity.trip_id);
-            dict[entity.trip_id] =  {routeId: idLigne, arrival: entity.arrival_time };
+    if (entity.stop_id === arret && datetrajet.getTime() >= heuredep.getTime() && datetrajet.getTime() <= heuredep1.getTime()) {
+      idLigne = getIdLigne(dataTrip, entity.trip_id);
+      dict[entity.trip_id] = { routeId: idLigne, arrival: entity.arrival_time };
 
-          }
-        })
-  dict=extratXperLigne(dict, 2)
+    }
+  })
+  dict = extratXperLigne(dict, nbParligne)
   return dict
 }
 
@@ -141,11 +155,11 @@ var dict = {};
  * @param {string} idTrip  id du transport
  * @returns {string} id de la ligne
  */
- function getIdLigne(data,idTrip){
-  var id=""
+function getIdLigne(data, idTrip) {
+  var id = ""
   data.forEach((entity) => {
     if (entity.trip_id === idTrip) {
-      id=entity.route_id      
+      id = entity.route_id
     }
   })
   return (id)
@@ -154,7 +168,7 @@ var dict = {};
 /**
   * fonction qui télécharge le fichier gtfs-rt et le décompresse
  */
-export async function initTrajet(){
+export async function initTrajet() {
   console.log("init")
   const url = 'https://chouette.enroute.mobi/api/v1/datas/Irigo/gtfs.zip';
   const destination = 'donnees/trajet_static';
@@ -187,24 +201,24 @@ function replaceFileExtensions(zip, destinationFolder) {
 }
 
 /**
- * fonction qui modifie le dictionaire pour ne guarder que X trajets par lignes
+ * fonction qui modifie le dictionaire pour ne guarder que X trajets par sens de ligne
  * @param {object} dictionaire contenant les informations des transports passant à l'arrêt
- * @param {int} nbtrajet nombre de trajet par ligne
- * @returns {object} dictionaire contenant X trajet par ligne
+ * @param {int} nbtrajet nombre de trajet par sens de ligne
+ * @returns {object} dictionaire contenant X trajet par sens de ligne
  */
-function extratXperLigne(data, nbtrajet){
-var lignesprésentes= new Map()
-var dict={}
-Object.keys(data).forEach( (entity) => {
-  if (!lignesprésentes.has(data[entity].routeId)) {
-    lignesprésentes.set(data[entity].routeId,nbtrajet-1)
-    dict[entity]=data[entity]
-    
-  }else if(lignesprésentes.get(data[entity].routeId)>0){
-    lignesprésentes.set(data[entity].routeId,lignesprésentes.get(data[entity].routeId)-1)
-    dict[entity]=data[entity]
+function extratXperLigne(data, nbtrajet) {
+  var lignesprésentes = new Map()
+  var dict = {}
+  Object.keys(data).forEach((entity) => {
+    if (!lignesprésentes.has(data[entity].routeId)) {
+      lignesprésentes.set(data[entity].routeId, nbtrajet - 1)
+      dict[entity] = data[entity]
+    } else if (lignesprésentes.get(data[entity].routeId) > 0) {
+      lignesprésentes.set(data[entity].routeId, lignesprésentes.get(data[entity].routeId) - 1)
+      dict[entity] = data[entity]
+    }
+  });
+  return dict
 }
-});
-return dict
 
-}
+

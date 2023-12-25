@@ -75,12 +75,16 @@ app.get('/getEdt', async (req, res) => {
 
 });
 app.get('/getTransport', async (req, res) => {
-  var list=getTransportAt(req.query.arret, new Date('2023-12-17 15:30:00')).then((value) => {
+  console.log("date depart",req.query.datedepart)
+  console.log("arret",req.query.arret)
+  console.log("nbparligne",req.query.nbparligne)
+  var list=getTransportAt(req.query.arret,new Date(req.query.datedepart),req.query.nbparligne).then((value) => {
     res.json(value)
   })
 });
 
 // Sending the page to the client
+//example=> http://localhost:3000/getTransport?arret=HARAS&datedepart=2023-12-25 19:04:00&nbparligne=2
 app.use('/', function (req, res) {
   res.sendFile(path.join(__dirname + '/express/index.html'));
 });
