@@ -5,7 +5,7 @@ import AdmZip from "adm-zip";
 import path from 'path';
 import * as csvToJson from "convert-csv-to-json";
 
-const decalage30 =  1800000
+const decalage30 = 1800000
 
 
 
@@ -18,27 +18,32 @@ const decalage30 =  1800000
  * @returns {object} dictionaire contenant les informations des transports passant à l'arrêt
  * */
 export async function getTransportAt(arret, datedepart, nbParligne) {
-  datedepart=new Date(datedepart)
+  if (nbParligne == undefined){
+    nbParligne = 1
+  }
+  datedepart = new Date(datedepart)
   const date = Date.now();
   const date30 = new Date(new Date(date).getTime() + decalage30)
-  console.log("date ", datedepart.getMinutes())
   initTrajet()
   var transports = {};
+  // TODO: Enlever les console log une fois le développement terminé
+  console.log("date depart", datedepart)
+  console.log("date ", new Date(date))
+  console.log("date30 ", date30)
   console.log("date depart dans le passé ", date > datedepart)
-  console.log("date depart dans moins de 30 min ", datedepart < date30 )
+  console.log("date depart dans moins de 30 min ", datedepart > date && datedepart < date30)
   //cas où l'heure de départ est dans le passé (ou dans moins de 30 min) on retourne les transports actuellement en circulation
-  if (datedepart.getTime() < date30 ) {
+  if (datedepart.getTime() < date30) {
     console.log("RT")
 
-    transports = await getTransportAtRT(arret,nbParligne)
+    transports = await getTransportAtRT(arret, nbParligne)
   }
   else {
     console.log("static")
-    transports = await getTransportAtStatic(arret, datedepart,nbParligne)
+    transports = await getTransportAtStatic(arret, datedepart, nbParligne)
   }
   return transports
 }
-
 /** 
  * fonction qui retourne {@link dict}, un dictionaire contenant l'id des transport, actuellement en circulations, 
  * passant à l'arret, leur id de lignes et le timestamp de leur arrivée à l'arrêt
@@ -79,12 +84,12 @@ async function getTransportAtRT(arret, nbParligne) {
     );
     //extrait les transport passant par l'arrêt
     var arrivalTime
-    var datenow= Date.now()
+    var datenow = Date.now()
     feed.entity.forEach((entity) => {
       if (entity.tripUpdate) {
         entity.tripUpdate.stopTimeUpdate.forEach((TimeUpdate) => {
-          if (TimeUpdate.stopId === arret && TimeUpdate.arrival.time.low *1000> datenow) {
-            arrivalTime = new Date(TimeUpdate.arrival.time.low*1000).toLocaleTimeString()
+          if (TimeUpdate.stopId === arret && TimeUpdate.arrival.time.low * 1000 > datenow) {
+            arrivalTime = new Date(TimeUpdate.arrival.time.low * 1000).toLocaleTimeString()
             dict[entity.id] = { routeId: entity.tripUpdate.trip.routeId, arrival: arrivalTime };
           }
         })
@@ -112,7 +117,7 @@ async function getTransportAtRT(arret, nbParligne) {
  * @param {int} nbParligne  nombre de transport par ligne que l'on souhaite garder
  * @returns {object} dictionaire contenant les informations des transports passant à l'arrêt
  * */
-async function getTransportAtStatic(arret, heureDepart,nbParligne) {
+async function getTransportAtStatic(arret, heureDepart, nbParligne) {
 
   /**
 * @namespace
@@ -208,8 +213,10 @@ function replaceFileExtensions(zip, destinationFolder) {
  * @returns {object} dictionaire contenant X trajet par sens de ligne
  */
 function extratXperLigne(data, nbtrajet) {
+  console.log("nb trajet:", nbtrajet)
   var lignesprésentes = new Map()
   var dict = {}
+  
   Object.keys(data).forEach((entity) => {
     if (!lignesprésentes.has(data[entity].routeId)) {
       lignesprésentes.set(data[entity].routeId, nbtrajet - 1)
