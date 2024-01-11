@@ -42,6 +42,7 @@ export async function getTransportAt(arret, datedepart, nbParligne) {
     console.log("static")
     transports = await getTransportAtStatic(arret, datedepart, nbParligne)
   }
+  console.log("transports", transports)
   return transports
 }
 /** 
@@ -58,7 +59,7 @@ async function getTransportAtRT(arret, nbParligne) {
   * @namespace
   * @property {object}         trip                  -id du transport s'arrétant à l'arrêt
   * @property {int | string}   trip.routeId          -id de la ligne du transport
-  * @property {timeSTAMP}      trip.arrival          -timestamp de l'arrivée du transport à l'arrêt
+  * @property {String}      trip.arrival             -Heure de l'arrivée du transport à l'arrêt
   *
   */
   var dict = {};
