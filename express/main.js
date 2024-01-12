@@ -1,13 +1,28 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // Get the id of the student from the url
     const searchParams = new URLSearchParams(window.location.search);
     const id = searchParams.get('id');
+    // Get the timetable of the student
     const [firstday, lastday] = getFirstAndLastDayOfCurrentWeek();
     const edt = await fetchEdt(id, firstday, lastday);
+    // Get the last lesson of the day
     const lastLessonHour = getLastLessonHour(edt, getFormattedDate());
-
-    // JavaScript pour mettre à jour la page
+    // Display the last lesson of the day
     document.getElementById('date').textContent = formatDate(new Date());
     document.getElementById('heureCours').textContent = lastLessonHour;
+    // Get the next bus of line 2 and 6 based on the hour of the last lesson
+    const bus = await fetchTransport("bus",lastLessonHour);
+    const busHour = getBusHour(bus);
+    // Display the next bus of line 2 and 6
+    document.getElementById('heure2').textContent = busHour[0];
+    document.getElementById('heure6').textContent = busHour[1];
+    // Get the next tram of line B and C based on the hour of the last lesson
+    const tram = await fetchTransport("tram",lastLessonHour);
+    const tramHour = getTramHour(tram);
+    // Display the next tram of line B and C
+    document.getElementById('heureB').textContent = tramHour[0];
+    document.getElementById('heureC').textContent = tramHour[1];
+
 });
 
 
@@ -49,7 +64,6 @@ function getFirstAndLastDayOfCurrentWeek() {
  * */
 function getFirstAndLastDayOfAnyWeek(date) {
     var date = new Date(date);
-    console.log("date : " + date)
     var first = date.getDate() - date.getDay() + 1;
     var last = first + 6;
 
@@ -79,13 +93,12 @@ function getLastLessonHour(json, date) {
             if (lesson.date_fin.slice(-8) > lastHour) {
                 lastHour = lesson.date_fin.slice(-8);
             }
-
         }
     })
     return lastHour;
 }
+
 /** Format the date in the french format
- * 
  * @param {Date} date date to format
  * @returns formatted date
  */
@@ -109,4 +122,80 @@ function getFormattedDate() {
     const formattedDate = `${day}/${month}/${year}`;
 
     return formattedDate;
+}
+
+/** Convert a date in a timesamp
+ * @param {string} date date to convert in format HH:MM:SS
+ * @returns timestamp (int)
+ */
+function dateToTimestamp(date) {
+    const currentDate = new Date();
+    dateSplit = date.split(':');
+
+    currentDate.setHours(dateSplit[0]);
+    currentDate.setMinutes(dateSplit[1]);
+    currentDate.setSeconds(dateSplit[2]);
+    currentDate.setMilliseconds(0);
+
+    // Get the timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)
+    const timestamp = currentDate.getTime();
+    return timestamp;
+}
+/** Fetch the transport trips at a given hour from the server
+ * @param {string} transport "bus" or "tram" the transport to get the hour of
+ * @param {string} lessonHour date to format HH:MM:SS the hour of the lesson
+ * @returns json of the transport at the hour of the lesson
+ */
+async function fetchTransport(transport, lessonHour){
+    try {
+        arret = (transport === "bus") ? "NDAMELAC" : "1BEAU";
+        const response = await fetch('http://localhost:3000/getTransport?arret=' + arret + '&heure=' + dateToTimestamp(lessonHour));
+        const bus = await response.json();
+        return bus;
+    }catch (error) {
+        console.error(error);
+    }
+}
+
+/** Get the next bus of line 2 and 6
+ * @param {JSON} transport json of the transport at the hour of the lesson
+ * @returns array of the next bus of line 2 and 6
+ */
+function getBusHour(transport){
+    
+    var busTime2 = 0;
+    var busTime6 = 0;
+    console.log("getBusHour", transport)
+    for (var key in transport) {
+        if (transport.hasOwnProperty(key)) {
+            if ((busTime2 == 0 || busTime2 > transport[key].arrival) && transport[key].routeId == "02" ) {
+                busTime2 = transport[key].arrival;
+            }else if((busTime6 == 0 || busTime6 > transport[key].arrival) && transport[key].routeId == "06"){
+                busTime6 = transport[key].arrival;
+            }
+        }
+    }
+    console.log("busTime2: ",busTime2,"busTime6: ",busTime6) 
+    return [busTime2,busTime6];
+}
+
+/** Get the next tram of line B and C
+ * @param {JSON} transport json of the transport at the hour of the lesson
+ * @returns array of the next tram of line B and C
+ */
+function getTramHour(transport){
+    
+    var tramTimeB = 0;
+    var tramTimeC = 0;
+    for (var key in transport) {
+        if (transport.hasOwnProperty(key)) {
+            if ((tramTimeB == 0 || tramTimeB > transport[key].arrival) && transport[key].routeId == "B") {
+                tramTimeB = transport[key].arrival;
+            }else if((tramTimeC == 0 || tramTimeC > transport[key].arrival) && transport[key].routeId == "C"){
+                tramTimeC = transport[key].arrival;
+            }
+        }
+    }
+
+    return [tramTimeB,tramTimeC];
 }

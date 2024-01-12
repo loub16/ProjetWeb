@@ -42,13 +42,15 @@ app.get('/getEdt', async (req, res) => {
   }
 
 });
+//example=> http://localhost:3000/getTransport?arret=HARAS&heure=timestamp 19:04:00&nbparligne=2
 app.get('/getTransport', async (req, res) => {
-  var list=getTransportAt(req.query.arret, new Date('2023-12-17 15:30:00')).then((value) => {
+  var list=getTransportAt(req.query.arret, new Date(parseInt(req.query.heure,10)),req.query.nbparligne).then((value) => {
     res.json(value)
   })
 });
 
 // Sending the page to the client
+
 app.use('/', function (req, res) {
   res.sendFile(path.join(__dirname + '/express/index.html'));
 });
