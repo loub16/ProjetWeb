@@ -165,19 +165,17 @@ function getBusHour(transport){
     
     var busTime2 = 0;
     var busTime6 = 0;
+    console.log("getBusHour", transport)
     for (var key in transport) {
         if (transport.hasOwnProperty(key)) {
-            if ((busTime2 == 0 || busTime2 > transport[key].arrival.time) && transport[key].routeId == "02" ) {
-                busTime2 = transport[key].arrival.time;
-            }else if((busTime6 == 0 || busTime6 > transport[key].arrival.time) && transport[key].routeId == "06"){
-                busTime6 = transport[key].arrival.time;
+            if ((busTime2 == 0 || busTime2 > transport[key].arrival) && transport[key].routeId == "02" ) {
+                busTime2 = transport[key].arrival;
+            }else if((busTime6 == 0 || busTime6 > transport[key].arrival) && transport[key].routeId == "06"){
+                busTime6 = transport[key].arrival;
             }
         }
     }
-    busTime2 = new Date(parseInt(busTime2, 10)*1000)
-    busTime2 = busTime2.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });  
-    busTime6 = new Date(parseInt(busTime6, 10)*1000)
-    busTime6 = busTime6.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); 
+    console.log("busTime2: ",busTime2,"busTime6: ",busTime6) 
     return [busTime2,busTime6];
 }
 
@@ -191,16 +189,13 @@ function getTramHour(transport){
     var tramTimeC = 0;
     for (var key in transport) {
         if (transport.hasOwnProperty(key)) {
-            if ((tramTimeB == 0 || tramTimeB > transport[key].arrival.time) && transport[key].routeId == "B") {
-                tramTimeB = transport[key].arrival.time;
-            }else if((tramTimeC == 0 || tramTimeC > transport[key].arrival.time) && transport[key].routeId == "C"){
-                tramTimeC = transport[key].arrival.time;
+            if ((tramTimeB == 0 || tramTimeB > transport[key].arrival) && transport[key].routeId == "B") {
+                tramTimeB = transport[key].arrival;
+            }else if((tramTimeC == 0 || tramTimeC > transport[key].arrival) && transport[key].routeId == "C"){
+                tramTimeC = transport[key].arrival;
             }
         }
     }
-    tramTimeB = new Date(parseInt(tramTimeB, 10)*1000)
-    tramTimeB = tramTimeB.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });  
-    tramTimeC = new Date(parseInt(tramTimeC, 10)*1000)
-    tramTimeC = tramTimeC.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });  
+
     return [tramTimeB,tramTimeC];
 }

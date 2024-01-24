@@ -1,0 +1,72 @@
+
+
+/*COULEURS******************************************/
+.green-color{
+    color: #46dd8a;
+}
+/***************************************************/
+
+/*CERCLE DE CHARGEMENT******************************/
+
+/*Creation cercle*/
+#loading-spinner {
+    display: none;
+    border: 5px solid rgba(0, 0, 0, 0.1);
+    border-left: 5px solid #65e39d;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+/*Animation cercle de chargement*/
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+/***************************************************/
+
+
+
+/*FORMULAIRE DE CONNEXION****************************/
+
+/*Changement couleur encadrement input par defaut */
+.form-control {
+    border-color: #65e39d !important; /*pour surpasser les caracteristiques donnees par bootstrap*/ 
+}
+/*Changement couleur encadrement input lorsqu'on le selectionne */
+input.form-control:focus {
+    border-color: #65e39d !important; 
+    box-shadow: 0 0 0 0.2rem rgba(0, 214, 125, 0.403) !important;
+}
+/***************************************************/
+
+
+
+
+/*BOÎTES DE RESULTATS********************************/
+
+/*Boîtes individuelles */
+.icon-box {
+    /*background-color: #478c66; /* Couleur de fond verte */
+    padding: 20px; /* Espacement interne pour le contenu */
+    border-radius: 10px; /* Bordures arrondies */
+    text-align: center; /* Centrer le texte */
+}
+
+/*Conteneur des boîtes */
+.icon-boxes {
+    margin-top: 20px; /* Espacement supérieur entre les boîtes */
+}
+
+/*Bordures des boîtes */
+.icon-boxes .icon-box {
+    border-left: 1px solid #65e39d;
+    border-top: 1px solid #65e39d; 
+    border-right: 5px solid #65e39d;
+    border-bottom: 5px solid #65e39d; 
+    height: 100%;
+    width: 100%;
+}
+
+/***************************************************/
