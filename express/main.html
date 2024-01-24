@@ -64,8 +64,16 @@
                     <img src="https://i.postimg.cc/nL7rZ9TP/bus-icon-green.png" alt="Icone Bus" width="40%"><br><br>
                     <p>
                         <b class="green-color">Arrêt <br>Notre Dame du Lac</b>
-                        <br><span id="heureNDL"></span>
                     </p>
+                    <label for="ligneBus">Ligne : </label>
+                        <select name="ligne" id="ligneB" onchange="ajoutMenuSens(this.value)">
+                            <option value="-1">--</option>
+                            <option value="2">Bus 2</option>
+                            <option value="6">Bus 6</option>
+                        </select>
+                        <select hidden name = "sensB" id = "sensB" onchange="(async ()=>{await setTransportHour(this.value);})()" ></select>
+                        <br><span id="heureBus"></span>
+                        
                 </div>
             </div>
             <!--Box 2-->
@@ -76,8 +84,16 @@
                     <img src="https://i.postimg.cc/L8JwJzcN/tram-icon-green.png" alt="Icone Tramway" width="40%"><br><br>
                     <p>
                         <b class="green-color">Arrêt <br>Beaussier</b> 
-                        <br><span id="heureB"></span>
+                        <!---->
                     </p>
+                    <label for="ligneTram">Ligne : </label>
+                        <select name="ligne" id="ligneT" onchange="ajoutMenuSens(this.value)">
+                            <option value="-1">--</option>
+                            <option value="B">Tram B</option>
+                            <option value="C">Tram C</option>
+                        </select>
+                        <select hidden name = "sensT" id = "sensT" onchange="(async ()=>{await setTransportHour(this.value);})() " ></select>
+                        <br><span id="heureTram"></span>
                 </div>
             </div>
             <!--Box 3-->
@@ -97,16 +113,7 @@
           </div>
         </div>
       </div>
+      <script src = "main.js"></script>
     
-    <!--OLD WAY
-    <h1>EDTransport</h1>
-    <p>Aujourd'hui : <span id="date"></span></p>
-    <p>Fini à : <span id="heureCours"></span></p>
-
-    <p>A Notre Dame du Lac : <span id="heureNDL"></span></p>
-    <p>A Beaussier : <span id="heureB"></span></p>
-
-
-    <script src = "main.js"></script>
 </body>
 </html>
