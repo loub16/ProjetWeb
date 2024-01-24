@@ -12,6 +12,8 @@ const dataStopTime = await csvToJson.fieldDelimiter(',').getJsonFromCsv("donnees
 const dataTrip = await csvToJson.fieldDelimiter(',').getJsonFromCsv("donnees\\trajet_static\\trips.csv");
 /**json contenant les infos liées aux routes*/
 const dataRoute = await csvToJson.fieldDelimiter(',').getJsonFromCsv("donnees\\trajet_static\\routes.csv");
+/**json contenant les infos liées aux arret*/
+const dataStops = await csvToJson.fieldDelimiter(',').getJsonFromCsv("donnees\\trajet_static\\stops.csv");
 /**modèle de date pour ne comparer que les différences d'heures et pas de date,  je json fournissant datastop time ne fournissant que des heures*/
 const hourstring = "2023-10-10 "
 
@@ -34,15 +36,7 @@ export async function getTransportAt(arret, datedepart, nbParligne) {
   const date30 = new Date(new Date(date).getTime() + decalage30)
   initTrajet()
   var transports = {};
-  // TODO: Enlever les console log une fois le développement terminé
-  /*
-  console.log("date depart", datedepart)
-  console.log("date ", new Date(date))
-  console.log("date30 ", date30)
-  console.log("date depart dans le passé ", date > datedepart)
-  console.log("date depart dans moins de 30 min ", datedepart > date && datedepart < date30)*/
-  //cas où l'heure de départ est dans le passé (ou dans moins de 30 min) on retourne les transports actuellement en circulation
-  if (datedepart.getTime() < date30) {
+ if (datedepart.getTime() < date30) {
     console.log("RT")
 
     transports = await getTransportAtRT(arret, nbParligne)
@@ -97,15 +91,17 @@ async function getTransportAtRT(arret, nbParligne) {
     var headsign
     var id
     var info = []
+    var ent
     feed.entity.forEach((entity) => {
       if (entity.tripUpdate) {
         entity.tripUpdate.stopTimeUpdate.forEach((TimeUpdate) => {
           if (TimeUpdate.stopId === arret && TimeUpdate.arrival.time.low * 1000 > datenow) {
+            ent=entity
             arrivalTime = new Date(TimeUpdate.arrival.time.low * 1000).toLocaleTimeString()
-            info = getInfoTrip(dataTrip, entity.id)
-            headsign = info[0]
-            idLigne = info[1]
-            dict[entity.id] = { routeId: entity.tripUpdate.trip.routeId, arrival: arrivalTime, headsign: headsign };
+            const [headsign, idLigne] = getInfoTrip(dataTrip, entity.tripUpdate.trip.tripId);
+            const [route_name, route_color] = getInfoRoute(dataRoute, entity.tripUpdate.trip.routeId)
+            dict[entity.tripUpdate.trip.tripId] = { routeId: entity.tripUpdate.trip.routeId, routeName: route_name, headsign: headsign,arrival: arrivalTime, color: route_color };
+          
           }
         })
       }
@@ -114,7 +110,7 @@ async function getTransportAtRT(arret, nbParligne) {
     function saveJSON(data, filename) {
       fs.writeFileSync(`${filename}.json`, JSON.stringify(data));
     }
-    saveJSON(feed, 'output');
+    saveJSON(ent, 'output');
     dict = extratXperLigne(dict, nbParligne)
     return dict
   }
@@ -144,7 +140,7 @@ async function getTransportAtStatic(arret, heureDepart, nbParligne) {
   var dict = {}
   var idLigne
   var headsign
-  
+
 
   /**temps de décalage entre le premier et dernier trajet  que l'on va considérer*/
   const décalage = 3600000;
@@ -157,8 +153,8 @@ async function getTransportAtStatic(arret, heureDepart, nbParligne) {
     const datetrajet = new Date(hourstring + entity.arrival_time);
     if (entity.stop_id === arret && datetrajet.getTime() >= heuredep.getTime() && datetrajet.getTime() <= heuredep1.getTime()) {
       const [headsign, idLigne] = getInfoTrip(dataTrip, entity.trip_id);
-      const[route_name,route_color]=getInfoRoute(dataRoute,idLigne)
-      dict[entity.trip_id] = { routeId: idLigne,routeName:route_name, headsign: headsign, arrival: entity.arrival_time,color:route_color };
+      const [route_name, route_color] = getInfoRoute(dataRoute, idLigne)
+      dict[entity.trip_id] = { routeId: idLigne, routeName: route_name, headsign: headsign, arrival: entity.arrival_time, color: route_color };
     }
   });
   //décommenter pour exporter le fichier
@@ -179,8 +175,12 @@ async function getTransportAtStatic(arret, heureDepart, nbParligne) {
  * @returns {array} informations de la ligne [headsign, id]
  */
 function getInfoTrip(data, idTrip) {
+  console.log(idTrip)
+  
   for (let entity of data) {
+
     if (entity.trip_id === idTrip) {
+      console.log("entité",entity)
       return [entity.trip_headsign, entity.route_id];
     }
   }
@@ -189,7 +189,7 @@ function getInfoTrip(data, idTrip) {
 function getInfoRoute(data, idRoute) {
   for (let entity of data) {
     if (entity.route_id === idRoute) {
-      return [ entity.route_long_name, entity.route_color];
+      return [entity.route_long_name, entity.route_color];
     }
   }
   return "info non trouvée";
@@ -245,19 +245,19 @@ function extratXperLigne(data, nbtrajet) {
     data = Object.values(data); // Convert data to an array
   }
   // Sort data by routeId and heureArrivee
-data.sort((a, b) => {
-  // Compare routeId
-  if (a.routeId < b.routeId) return -1;
-  if (a.routeId > b.routeId) return 1;
+  data.sort((a, b) => {
+    // Compare routeId
+    if (a.routeId < b.routeId) return -1;
+    if (a.routeId > b.routeId) return 1;
 
-  // If routeId is the same, compare heureArrivee
-  if (new Date(hourstring+a.arrival )<new Date(hourstring+ b.arrival)) return -1;
-  if (new Date(hourstring+a.arrival) > new Date(hourstring+b.arrival)) return 1;
+    // If routeId is the same, compare heureArrivee
+    if (new Date(hourstring + a.arrival) < new Date(hourstring + b.arrival)) return -1;
+    if (new Date(hourstring + a.arrival) > new Date(hourstring + b.arrival)) return 1;
 
-  return 0; // They are equal
-});
+    return 0; // They are equal
+  });
 
-console.log("Sorted data:", data);
+
   Object.keys(data).forEach((entity) => {
     if (!lignesprésentes.has(data[entity].routeId)) {
       lignesprésentes.set(data[entity].routeId, nbtrajet - 1)
@@ -268,6 +268,16 @@ console.log("Sorted data:", data);
     }
   });
   return dict
+}
+
+function getArret(dataStops, nomArret) {
+  const stopIds = [];
+  for (const stop of dataStops) {
+    if (stop.stop_name === nomArret) {
+      stopIds.push(stop.stop_id);
+    }
+  }
+  return stopIds;
 }
 
 
