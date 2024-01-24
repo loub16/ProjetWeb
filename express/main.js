@@ -10,21 +10,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Display the last lesson of the day
     document.getElementById('date').textContent = formatDate(new Date());
     document.getElementById('heureCours').textContent = lastLessonHour;
-    
-    
-    // Get the next bus of line 2 and 6 based on the hour of the last lesson
-    //const bus = await fetchTransport("bus",lastLessonHour);
-    //const busHour = getBusHour(bus);
-    // Display the next bus of line 2 and 6
-    //document.getElementById('heure2').textContent = busHour[0];
-    //document.getElementById('heure6').textContent = busHour[1];
-    // Get the next tram of line B and C based on the hour of the last lesson
-    //const tram = await fetchTransport("tram",lastLessonHour);
-    //const tramHour = getTramHour(tram);
-    // Display the next tram of line B and C
-    //document.getElementById('heureB').textContent = tramHour[0];
-    //document.getElementById('heureC').textContent = tramHour[1];
-
 });
 
 
