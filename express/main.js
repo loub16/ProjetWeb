@@ -10,6 +10,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Display the last lesson of the day
     document.getElementById('date').textContent = formatDate(new Date());
     document.getElementById('heureCours').textContent = lastLessonHour;
+
+
+    // Get the date input element
+    const dateInput = document.getElementById('calendar');
+
+    // Add a 'change' event listener to the date input
+    dateInput.addEventListener('change', function() {
+        (async () => {
+            const selectedDate = dateInput.value;
+            const [firstday, lastday] = getFirstAndLastDayOfAnyWeek(selectedDate);
+            const edt = await fetchEdt(id, firstday, lastday);
+            const parts = selectedDate.split('-');
+            const rearrangedDate = [parts[2], parts[1], parts[0]].join('/');
+            const lastLessonHour = getLastLessonHour(edt, rearrangedDate);
+            document.getElementById('heureCours').textContent = lastLessonHour;
+            document.getElementById('date').textContent = formatDate(new Date(selectedDate));
+        })();    
+    });
 });
 
 
@@ -128,6 +146,7 @@ function dateToTimestamp(date) {
     const timestamp = currentDate.getTime();
     return timestamp;
 }
+
 /** Fetch the transport trips at a given hour from the server
  * @param {string} arret code of the stop
  * @param {string} lessonHour date to format HH:MM:SS the hour of the lesson
@@ -152,7 +171,6 @@ function getBusHour(transport){
     
     var busTime2 = 0;
     var busTime6 = 0;
-    console.log("getBusHour", transport)
     for (var key in transport) {
         if (transport.hasOwnProperty(key)) {
             if ((busTime2 == 0 || busTime2 > transport[key].arrival) && transport[key].routeId == "02" ) {
@@ -162,7 +180,6 @@ function getBusHour(transport){
             }
         }
     }
-    console.log("busTime2: ",busTime2,"busTime6: ",busTime6) 
     return [busTime2,busTime6];
 }
 
