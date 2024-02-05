@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // Get the id of the student from the url
-    const searchParams = new URLSearchParams(window.location.search);
-    const id = searchParams.get('id');
+    //const searchParams = new URLSearchParams(window.location.search);
+    //const id = searchParams.get('id');
+    const id = localStorage.getItem("userId");
     // Get the timetable of the student
     const [firstday, lastday] = getFirstAndLastDayOfCurrentWeek();
     const edt = await fetchEdt(id, firstday, lastday);
@@ -26,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const lastLessonHour = getLastLessonHour(edt, rearrangedDate);
             document.getElementById('heureCours').textContent = lastLessonHour;
             document.getElementById('date').textContent = formatDate(new Date(selectedDate));
-        })();    
+        })();   
     });
 });
 
@@ -285,21 +286,25 @@ async function setTransportHour(sens){
         const busHour = getBusHour(bus);
         const arretHour = sens == 'SB' ? busHour[0] : busHour[1];
         document.getElementById('heureBus').textContent = arretHour;
+        document.getElementById('text1').removeAttribute("hidden");
     }else if(sens == 'BS' || sens == 'AB'){
         const bus = await fetchTransport("NDAMLA-E",document.getElementById('heureCours').textContent);
         const busHour = getBusHour(bus);
         const arretHour = sens == 'BS' ? busHour[0] : busHour[1];
         document.getElementById('heureBus').textContent = arretHour;
+        document.getElementById('text1').removeAttribute("hidden");
     }else if(sens == 'BR' || sens == 'BM'){
         const tram = await fetchTransport("1BEAU",document.getElementById('heureCours').textContent);
         const tramHour = getTramHour(tram);
         const arretHour = sens == 'BM' ? tramHour[0] : tramHour[1];
         document.getElementById('heureTram').textContent = arretHour;
+        document.getElementById('text2').removeAttribute("hidden");
     }else if(sens == 'RB' || sens == 'MB'){
         const tram = await fetchTransport("2BEAU",document.getElementById('heureCours').textContent);
         const tramHour = getTramHour(tram);
         const arretHour = sens == 'MB' ? tramHour[0] : tramHour[1];
         document.getElementById('heureTram').textContent = arretHour;
+        document.getElementById('text2').removeAttribute("hidden");
     }
     
 }

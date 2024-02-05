@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
+    
+    if (localStorage.getItem("userId")) {
+        localStorage.removeItem("userId"); //vider le storage pour la deconnexion
+    }
+
     const executeButton = document.getElementById('executeButton');
     const resultElement = document.getElementById('result');
     const usernameInput = document.getElementById('username');
@@ -17,12 +22,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const id = await fetchId(username, password);
+        localStorage.setItem("userId", id);
+
         if (id === undefined) {
             resultElement.textContent = 'Failed to get ID, check your username and password.';
             hideLoadingSpinner();
             return;
         } else {
-            window.location.href = "main.html?id=" + id;
+            //window.location.href = "main.html?id=" + id;
+            window.location.href = "main.html";
         }      
 
     });
