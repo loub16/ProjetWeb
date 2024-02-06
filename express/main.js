@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // Get the id of the student from the url
-    const searchParams = new URLSearchParams(window.location.search);
-    const id = searchParams.get('id');
+    //const searchParams = new URLSearchParams(window.location.search);
+    //const id = searchParams.get('id');
+    const id = localStorage.getItem("userId");
     // Get the timetable of the student
     const [firstday, lastday] = getFirstAndLastDayOfCurrentWeek();
     const edt = await fetchEdt(id, firstday, lastday);
@@ -10,19 +11,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Display the last lesson of the day
     document.getElementById('date').textContent = formatDate(new Date());
     document.getElementById('heureCours').textContent = lastLessonHour;
-    // Get the next bus of line 2 and 6 based on the hour of the last lesson
-    const bus = await fetchTransport("bus",lastLessonHour);
-    const busHour = getBusHour(bus);
-    // Display the next bus of line 2 and 6
-    document.getElementById('heure2').textContent = busHour[0];
-    document.getElementById('heure6').textContent = busHour[1];
-    // Get the next tram of line B and C based on the hour of the last lesson
-    const tram = await fetchTransport("tram",lastLessonHour);
-    const tramHour = getTramHour(tram);
-    // Display the next tram of line B and C
-    document.getElementById('heureB').textContent = tramHour[0];
-    document.getElementById('heureC').textContent = tramHour[1];
 
+
+    // Get the date input element
+    const dateInput = document.getElementById('calendar');
+
+    // Add a 'change' event listener to the date input
+    dateInput.addEventListener('change', function() {
+        (async () => {
+            const selectedDate = dateInput.value;
+            const [firstday, lastday] = getFirstAndLastDayOfAnyWeek(selectedDate);
+            const edt = await fetchEdt(id, firstday, lastday);
+            const parts = selectedDate.split('-');
+            const rearrangedDate = [parts[2], parts[1], parts[0]].join('/');
+            const lastLessonHour = getLastLessonHour(edt, rearrangedDate);
+            document.getElementById('heureCours').textContent = lastLessonHour;
+            document.getElementById('date').textContent = formatDate(new Date(selectedDate));
+        })();   
+    });
 });
 
 
@@ -141,14 +147,15 @@ function dateToTimestamp(date) {
     const timestamp = currentDate.getTime();
     return timestamp;
 }
+
 /** Fetch the transport trips at a given hour from the server
- * @param {string} transport "bus" or "tram" the transport to get the hour of
+ * @param {string} arret code of the stop
  * @param {string} lessonHour date to format HH:MM:SS the hour of the lesson
  * @returns json of the transport at the hour of the lesson
  */
-async function fetchTransport(transport, lessonHour){
+async function fetchTransport(arret, lessonHour){
     try {
-        arret = (transport === "bus") ? "NDAMELAC" : "1BEAU";
+        //arret = (transport === "bus") ? "NDAMELAC" : "1BEAU";
         const response = await fetch('http://localhost:3000/getTransport?arret=' + arret + '&heure=' + dateToTimestamp(lessonHour));
         const bus = await response.json();
         return bus;
@@ -167,17 +174,13 @@ function getBusHour(transport){
     var busTime6 = 0;
     for (var key in transport) {
         if (transport.hasOwnProperty(key)) {
-            if ((busTime2 == 0 || busTime2 > transport[key].arrival.time) && transport[key].routeId == "02" ) {
-                busTime2 = transport[key].arrival.time;
-            }else if((busTime6 == 0 || busTime6 > transport[key].arrival.time) && transport[key].routeId == "06"){
-                busTime6 = transport[key].arrival.time;
+            if ((busTime2 == 0 || busTime2 > transport[key].arrival) && transport[key].routeId == "02" ) {
+                busTime2 = transport[key].arrival;
+            }else if((busTime6 == 0 || busTime6 > transport[key].arrival) && transport[key].routeId == "06"){
+                busTime6 = transport[key].arrival;
             }
         }
     }
-    busTime2 = new Date(parseInt(busTime2, 10)*1000)
-    busTime2 = busTime2.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });  
-    busTime6 = new Date(parseInt(busTime6, 10)*1000)
-    busTime6 = busTime6.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); 
     return [busTime2,busTime6];
 }
 
@@ -191,16 +194,117 @@ function getTramHour(transport){
     var tramTimeC = 0;
     for (var key in transport) {
         if (transport.hasOwnProperty(key)) {
-            if ((tramTimeB == 0 || tramTimeB > transport[key].arrival.time) && transport[key].routeId == "B") {
-                tramTimeB = transport[key].arrival.time;
-            }else if((tramTimeC == 0 || tramTimeC > transport[key].arrival.time) && transport[key].routeId == "C"){
-                tramTimeC = transport[key].arrival.time;
+            if ((tramTimeB == 0 || tramTimeB > transport[key].arrival) && transport[key].routeId == "B") {
+                tramTimeB = transport[key].arrival;
+            }else if((tramTimeC == 0 || tramTimeC > transport[key].arrival) && transport[key].routeId == "C"){
+                tramTimeC = transport[key].arrival;
             }
         }
     }
-    tramTimeB = new Date(parseInt(tramTimeB, 10)*1000)
-    tramTimeB = tramTimeB.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });  
-    tramTimeC = new Date(parseInt(tramTimeC, 10)*1000)
-    tramTimeC = tramTimeC.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });  
+
     return [tramTimeB,tramTimeC];
+}
+
+
+/** Adds the directions of the transport to the select menu depending of the route
+ * @param {String} ligne
+ */
+function ajoutMenuSens(ligne){
+    var select;
+    switch(ligne){
+        case "2":
+            select = document.getElementById("sensB");
+            break;
+        case "6":
+            select = document.getElementById("sensB");
+            break;
+        case "B":
+            select = document.getElementById("sensT");
+            break;
+        case "C":
+            select = document.getElementById("sensT");
+            break;
+    }
+
+    select.removeAttribute("hidden");
+    select.innerHTML = "";
+    var option = document.createElement("option");
+    option.text = "--";
+    option.value = "-1";
+    select.add(option);
+
+    switch(ligne){
+        case "2":
+            var option = document.createElement("option");
+            option.text = "BEAUCOUZÉ - ST-BARTHÉLEMY";
+            option.value = "BS";
+            select.add(option);
+            var option = document.createElement("option");
+            option.text = "ST-BARTHÉLEMY - BEAUCOUZÉ";
+            option.value = "SB";
+            select.add(option);
+            break;
+        case "6":
+            var option = document.createElement("option");
+            option.text = "BOUCHEMAINE - CHU-Hôpital";
+            option.value = "BA";
+            select.add(option);
+            var option = document.createElement("option");
+            option.text = "CHU-Hôpital - BOUCHEMAINE";
+            option.value = "AB";
+            select.add(option);
+            break;
+        case "B":
+            var option = document.createElement("option");
+            option.text = "Monplaisir - Beille-Beille Campus";
+            option.value = "MB";
+            select.add(option);
+            var option = document.createElement("option");
+            option.text = "Beille-Beille Campus - Monplaisir";
+            option.value = "BM";
+            select.add(option);
+            break;
+        case "C":
+            var option = document.createElement("option");
+            option.text = "Roseraie - Beille-Beille";
+            option.value = "RB";
+            select.add(option);
+            var option = document.createElement("option");
+            option.text = "Belle-Beille - Roseraie";
+            option.value = "BR";
+            select.add(option);
+            break;
+    }
+}
+
+/** Sets the hour of the transport depending of the route and the direction
+ * @param {String} sens direction of the route
+ */
+async function setTransportHour(sens){
+    if(sens == 'SB' || sens == 'BA'){
+        const bus = await fetchTransport("NDAMELAC",document.getElementById('heureCours').textContent);
+        const busHour = getBusHour(bus);
+        const arretHour = sens == 'SB' ? busHour[0] : busHour[1];
+        document.getElementById('heureBus').textContent = arretHour;
+        document.getElementById('text1').removeAttribute("hidden");
+    }else if(sens == 'BS' || sens == 'AB'){
+        const bus = await fetchTransport("NDAMLA-E",document.getElementById('heureCours').textContent);
+        const busHour = getBusHour(bus);
+        const arretHour = sens == 'BS' ? busHour[0] : busHour[1];
+        document.getElementById('heureBus').textContent = arretHour;
+        document.getElementById('text1').removeAttribute("hidden");
+    }else if(sens == 'BR' || sens == 'BM'){
+        const tram = await fetchTransport("1BEAU",document.getElementById('heureCours').textContent);
+        const tramHour = getTramHour(tram);
+        const arretHour = sens == 'BM' ? tramHour[0] : tramHour[1];
+        document.getElementById('heureTram').textContent = arretHour;
+        document.getElementById('text2').removeAttribute("hidden");
+    }else if(sens == 'RB' || sens == 'MB'){
+        const tram = await fetchTransport("2BEAU",document.getElementById('heureCours').textContent);
+        const tramHour = getTramHour(tram);
+        const arretHour = sens == 'MB' ? tramHour[0] : tramHour[1];
+        document.getElementById('heureTram').textContent = arretHour;
+        document.getElementById('text2').removeAttribute("hidden");
+    }
+    
 }
