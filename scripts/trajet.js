@@ -41,6 +41,7 @@ export async function getTransportAt(arret, datedepart, nbParligne) {
   initTrajet()
   var transports = {};
   if (datedepart.getTime() < date30) {
+    console.log("datedepart",datedepart)
     console.log("RT")
 
     transports = await getTransportAtRT(arret, nbParligne)
@@ -634,3 +635,14 @@ function getTripsWithArrets(tripIdDepart, arretfinal) {
     return listId
 
   }
+
+  export async function getAllArretName(){
+    var arretName=[]
+    dataStops.forEach(element => {
+      arretName.push(element.stop_name)
+    });
+    console.log(arretName)
+    return arretName
+  }
+
+  getAllArretName()

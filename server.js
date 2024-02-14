@@ -1,5 +1,6 @@
 import {getTransportAt} from './scripts/trajet.js';
 import {getTrajetInAllTrip} from './scripts/trajet.js';
+import {getAllArretName} from './scripts/trajet.js';
 import {getId, getEdt} from './scripts/edt.js';
 import  http from 'http';
 import express from 'express';
@@ -7,6 +8,7 @@ import express from 'express';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { get } from 'https';
 
 const __filename = fileURLToPath(import.meta.url);
 
@@ -45,7 +47,9 @@ app.get('/getEdt', async (req, res) => {
 });
 //example=> http://localhost:3000/getTransport?arret=HARAS&heure=timestamp 19:04:00&nbparligne=2
 app.get('/getTransport', async (req, res) => {
+  console.log(new Date(parseInt(req.query.heure,10)))
   var list=getTransportAt(req.query.arret, new Date(parseInt(req.query.heure,10)),req.query.nbparligne).then((value) => {
+
     res.json(value)
   })
 });
@@ -53,6 +57,11 @@ app.get('/getTransport', async (req, res) => {
 //example=> http://localhost:3000/getTrajet?idTrip=5369904&arretName=HARAS
 app.get('/getTrajet', async (req, res) => {
   var list=getTrajetInAllTrip(req.query.idTrip,req.query.arretName).then((value) => {
+    res.json(value)
+  })
+});
+app.get('/getAllArretName', async (req, res) => {
+  var list=getAllArretName().then((value) => {
     res.json(value)
   })
 });
