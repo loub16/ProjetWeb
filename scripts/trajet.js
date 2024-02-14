@@ -41,13 +41,9 @@ export async function getTransportAt(arret, datedepart, nbParligne) {
   initTrajet()
   var transports = {};
   if (datedepart.getTime() < date30) {
-    console.log("datedepart",datedepart)
-    console.log("RT")
-
     transports = await getTransportAtRT(arret, nbParligne)
   }
   else {
-    console.log("static")
     transports = await getTransportAtStatic(arret, datedepart, nbParligne)
   }
   return transports
@@ -200,7 +196,6 @@ function getInfoRoute(data, idRoute) {
   * fonction qui télécharge le fichier gtfs-rt et le décompresse
  */
 export async function initTrajet() {
-  console.log("init")
   const url = 'https://chouette.enroute.mobi/api/v1/datas/Irigo/gtfs.zip';
   const destination = 'donnees/trajet_static';
   await downloadZipFile(url, destination);
@@ -484,7 +479,6 @@ function getHeurearriveStaticEscale(trip_id, arretfinal) {
  * @returns {Array} - Un tableau de trajets avec des arrêts communs. de la forme [tripId, [arretCommun, heureArrivee, heureDepart]]
  */
 function getTripsWithArrets(tripIdDepart, arretfinal) {
-  const start = new Date();
   const trips = [];
   const arretsDepartName = getListArretStaticName(tripIdDepart);
   const arretsDepart = getListArretStatic(tripIdDepart);  
@@ -523,8 +517,6 @@ function getTripsWithArrets(tripIdDepart, arretfinal) {
       }
     }
   }
-    const end = new Date() - start;
-    console.log(end);
     return trips;
   }
 
@@ -641,7 +633,6 @@ function getTripsWithArrets(tripIdDepart, arretfinal) {
     dataStops.forEach(element => {
       arretName.push(element.stop_name)
     });
-    console.log(arretName)
     return arretName
   }
 
