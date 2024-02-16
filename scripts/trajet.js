@@ -101,7 +101,7 @@ async function getTransportAtRT(arret, nbParligne) {
             arrivalTime = new Date(TimeUpdate.arrival.time.low * 1000).toLocaleTimeString()
             const [headsign, idLigne] = getInfoTrip(dataTrip, entity.tripUpdate.trip.tripId);
             const [route_name, route_color] = getInfoRoute(dataRoute, entity.tripUpdate.trip.routeId)
-            dict[entity.tripUpdate.trip.tripId] = { routeId: entity.tripUpdate.trip.routeId, routeName: route_name, headsign: headsign, arrival: arrivalTime, color: route_color };
+            dict[entity.tripUpdate.trip.tripId] = { routeId: entity.tripUpdate.trip.routeId, routeName: route_name, headsign: headsign, arrival: arrivalTime, color: route_color,tripId:entity.tripUpdate.trip.tripId };
 
           }
         })
