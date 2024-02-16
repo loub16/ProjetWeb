@@ -361,7 +361,7 @@ export async function getTrajetInAllTrip(trip_id, nomArret) {
   var trips = []
   trips.push(getTrajet(trip_id, nomArret))
   var fastestindex = 0
-  if(trips==undefined){
+  if(trips[0]!=undefined){
   var fastesthour = heureToDateTime(trips[0].arrivée.heure_arrivee)
   for(const trip of trips){
     if(heureToDateTime(trip.arrivée.heure_arrivee)<fastesthour){
