@@ -361,6 +361,7 @@ export async function getTrajetInAllTrip(trip_id, nomArret) {
   var trips = []
   trips.push(getTrajet(trip_id, nomArret))
   var fastestindex = 0
+  if(trips==undefined){
   var fastesthour = heureToDateTime(trips[0].arrivée.heure_arrivee)
   for(const trip of trips){
     if(heureToDateTime(trip.arrivée.heure_arrivee)<fastesthour){
@@ -369,6 +370,8 @@ export async function getTrajetInAllTrip(trip_id, nomArret) {
     }
   }
   return tripLegerToTripInfo(trips[fastestindex])
+}
+return ("Aucun trajet trouvé")
 
 }
 
@@ -442,6 +445,9 @@ function getHeurearriveStaticDirecte(trip_id, arret) {
 function getHeurearriveStaticEscale(trip_id, arretfinal) {
   var correspondance = getTripsWithArrets(trip_id, arretfinal)
   var fastest = getFastestCorrespondance(correspondance)
+  if (!fastest == undefined) {
+    
+  
   var leastWaitTime = getLeastWaitTime(fastest[1])
   var trajetLeger = {
     status: { withCorrespondance: true },
@@ -449,7 +455,10 @@ function getHeurearriveStaticEscale(trip_id, arretfinal) {
     correspondance: { trip_id: fastest[0], arret_id: leastWaitTime[2], heure_départ: leastWaitTime[3] },
     arrivée: { arret: fastest[2], heure_arrivee: getHeureArrivee(fastest[0], fastest[2]) }
   };
+
   return trajetLeger
+}
+return undefined
 }
 
 /**
