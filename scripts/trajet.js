@@ -101,7 +101,7 @@ async function getTransportAtRT(arret, nbParligne) {
             arrivalTime = new Date(TimeUpdate.arrival.time.low * 1000).toLocaleTimeString()
             const [headsign, idLigne] = getInfoTrip(dataTrip, entity.tripUpdate.trip.tripId);
             const [route_name, route_color] = getInfoRoute(dataRoute, entity.tripUpdate.trip.routeId)
-            dict[entity.tripUpdate.trip.tripId] = { routeId: entity.tripUpdate.trip.routeId, routeName: route_name, headsign: headsign, arrival: arrivalTime, color: route_color,tripId:entity.tripUpdate.trip.tripId };
+            dict[entity.tripUpdate.trip.tripId] = { routeId: entity.tripUpdate.trip.routeId, routeName: route_name, headsign: headsign, arrival: arrivalTime, color: route_color, tripId: entity.tripUpdate.trip.tripId };
 
           }
         })
@@ -155,7 +155,7 @@ async function getTransportAtStatic(arret, heureDepart, nbParligne) {
     if (entity.stop_id === arret && datetrajet.getTime() >= heuredep.getTime() && datetrajet.getTime() <= heuredep1.getTime()) {
       const [headsign, idLigne] = getInfoTrip(dataTrip, entity.trip_id);
       const [route_name, route_color] = getInfoRoute(dataRoute, idLigne)
-      dict[entity.trip_id] = { routeId: idLigne, routeName: route_name, headsign: headsign, arrival: entity.arrival_time, color: route_color,tripId:entity.trip_id };
+      dict[entity.trip_id] = { routeId: idLigne, routeName: route_name, headsign: headsign, arrival: entity.arrival_time, color: route_color, tripId: entity.trip_id };
     }
   });
   //décommenter pour exporter le fichier
@@ -295,8 +295,8 @@ function getStopName(dataStops, idArret) {
  * @returns {Array<string>} - Un tableau d'identifiants d'arrêts et de leur séquence d'arrivée.
  */
 function getListArretStaticWithSequence(trip_id) {
-  var list_stop_id= dataStopTime.filter(entity => entity.trip_id === trip_id).map(entity => [entity.stop_id, entity.stop_sequence]);
-  var list_stop_name=[]
+  var list_stop_id = dataStopTime.filter(entity => entity.trip_id === trip_id).map(entity => [entity.stop_id, entity.stop_sequence]);
+  var list_stop_name = []
   list_stop_id.forEach(element => {
     list_stop_name.push([getStopName(dataStops, element[0]), element[1]])
   });
@@ -309,8 +309,8 @@ function getListArretStaticWithSequence(trip_id) {
  * @returns {Array<string>} - Un tableau d'identifiants d'arrêts.
  */
 function getListArretStaticName(trip_id) {
-  var list_stop_id= dataStopTime.filter(entity => entity.trip_id === trip_id).map(entity => entity.stop_id);
-  var list_stop_name=[]
+  var list_stop_id = dataStopTime.filter(entity => entity.trip_id === trip_id).map(entity => entity.stop_id);
+  var list_stop_name = []
   list_stop_id.forEach(element => {
     list_stop_name.push(getStopName(dataStops, element))
   });
@@ -334,8 +334,15 @@ function getListArretStatic(trip_id) {
  * @param {string} arret - L'arrêt à vérifier.
  * @returns {boolean} - True si l'arrêt fait partie du trajet, sinon False.
  */
-function isArretOnTripStatic(trip_id, arret) {
-  return getListArretStatic(trip_id).includes(arret);
+function isArretOnTripStatic(trip_id, arret,arretinitial) {
+  const listarret= getListArretStatic(trip_id);
+  if(getListArretStatic(trip_id).includes(arret)){
+  const iarretinitial=listarret.indexOf(arretinitial)
+  const iarretfinal=listarret.indexOf(arret)
+  return iarretinitial<iarretfinal
+  }
+  return false
+ // return getListArretStatic(trip_id).includes(arret);
 }
 
 
@@ -345,33 +352,34 @@ function isArretOnTripStatic(trip_id, arret) {
  * @param {string} arret - L'arrêt du trajet.
  * @returns {string} - L'heure d'arrivée du trajet.
  */
-function getTrajet(trip_id, arret) {
-  var arretids= getStopId(dataStops, arret)
+function getTrajet(trip_id, arret,arretinitial) {
+  var arretids = getStopId(dataStops, arret)
   for (const arretId of arretids) {
-    if (isArretOnTripStatic(trip_id, arretId)) {
+    if (isArretOnTripStatic(trip_id, arretId,arretinitial)) {
       return getHeurearriveStaticDirecte(trip_id, arretId)
     }
   }
-    return getHeurearriveStaticEscale(trip_id, arretids[0]);
-  
+  return getHeurearriveStaticEscale(trip_id, arretids[0],arretinitial);
+
 }
 
-export async function getTrajetInAllTrip(trip_id, nomArret) {
-  const arretIds=  getStopId(dataStops, nomArret)
+export async function getTrajetInAllTrip(trip_id, nomArret,arretinitial) {
+  const arretIds = getStopId(dataStops, nomArret)
   var trips = []
-  trips.push(getTrajet(trip_id, nomArret))
+  trips.push(getTrajet(trip_id, nomArret,arretinitial))
   var fastestindex = 0
-  if(trips[0]!=undefined){
-  var fastesthour = heureToDateTime(trips[0].arrivée.heure_arrivee)
-  for(const trip of trips){
-    if(heureToDateTime(trip.arrivée.heure_arrivee)<fastesthour){
-      fastesthour=trip.arrivée.heure_arrivee
-      fastestindex=trips.indexOf(trip)
+
+  if (trips[0] != undefined) {
+    var fastesthour = heureToDateTime(trips[0].arrivée.heure_arrivee)
+    for (const trip of trips) {
+      if (heureToDateTime(trip.arrivée.heure_arrivee) < fastesthour) {
+        fastesthour = trip.arrivée.heure_arrivee
+        fastestindex = trips.indexOf(trip)
+      }
     }
+    return tripLegerToTripInfo(trips[fastestindex])
   }
-  return tripLegerToTripInfo(trips[fastestindex])
-}
-return ("Aucun trajet trouvé")
+  return ("Aucun trajet trouvé")
 
 }
 
@@ -380,11 +388,11 @@ function tripLegerToTripInfo(tripLeger) {
   const info_route = getInfoRoute(dataRoute, info_trip[1])
   var info_trip2;
   var info_route2;
-  var changement=false;
-  if(tripLeger.status.withCorrespondance){
+  var changement = false;
+  if (tripLeger.status.withCorrespondance) {
     info_trip2 = getInfoTrip(dataTrip, tripLeger.correspondance.trip_id)
     info_route2 = getInfoRoute(dataRoute, info_trip2[1])
-    if(tripLeger.correspondance.arret_id!=tripLeger.premier.arret_id){
+    if (tripLeger.correspondance.arret_id != tripLeger.premier.arret_id) {
       changement = true
     }
   }
@@ -393,12 +401,13 @@ function tripLegerToTripInfo(tripLeger) {
   tripInfo.premier = {
     trip: { trip_id: tripLeger.premier.trip_id, trip_headsign: info_trip[0], routeId: info_trip[1], route_name: info_route[0], route_color: info_route[1] },
     arret: { arret: getStopName(dataStops, tripLeger.premier.arret_id), heure_arrivee: tripLeger.premier.heure_arrivee, arretId: tripLeger.premier.arret_id },
-    changement: changement}
+    changement: changement
+  }
 
-  if(tripLeger.status.withCorrespondance){
+  if (tripLeger.status.withCorrespondance) {
     tripInfo.correspondance = {
       trip: { trip_id: tripLeger.correspondance.trip_id, trip_headsign: info_trip2[0], routeId: info_trip2[1], route_name: info_route2[0], route_color: info_route2[1] },
-      arret: { arret: getStopName(dataStops, tripLeger.correspondance.arret_id), heure_depart: tripLeger.correspondance.heure_départ,arretId: tripLeger.correspondance.arret_id}
+      arret: { arret: getStopName(dataStops, tripLeger.correspondance.arret_id), heure_depart: tripLeger.correspondance.heure_départ, arretId: tripLeger.correspondance.arret_id }
     }
   }
   tripInfo.arrivée = { arret: getStopName(dataStops, tripLeger.arrivée.arret), heure_arrivee: tripLeger.arrivée.heure_arrivee }
@@ -421,7 +430,7 @@ function tripLegerToTripInfo(tripLeger) {
 function getHeurearriveStaticDirecte(trip_id, arret) {
   var trajetDirect = {
     status: { withCorrespondance: false },
-    premier: { trip_id:trip_id, arret_id: arret, heure_arrivee: getHeureArrivee(trip_id, arret)},
+    premier: { trip_id: trip_id, arret_id: arret, heure_arrivee: getHeureArrivee(trip_id, arret) },
     arrivée: { arret, heure_arrivee: getHeureArrivee(trip_id, arret) }
   };
   return trajetDirect;
@@ -442,23 +451,21 @@ function getHeurearriveStaticDirecte(trip_id, arret) {
  * @param {string} arretfinal - L'identifiant de l'arrêt final.
  * @returns {Object} - Un objet contenant les détails du trajet léger, incluant les heures d'arrivée.
  */
-function getHeurearriveStaticEscale(trip_id, arretfinal) {
-  var correspondance = getTripsWithArrets(trip_id, arretfinal)
-  var fastest = getFastestCorrespondance(correspondance)
-  if (!fastest == undefined) {
-    
-  
-  var leastWaitTime = getLeastWaitTime(fastest[1])
-  var trajetLeger = {
-    status: { withCorrespondance: true },
-    premier: { trip_id, arret_id: leastWaitTime[0], heure_arrivee: leastWaitTime[1] },
-    correspondance: { trip_id: fastest[0], arret_id: leastWaitTime[2], heure_départ: leastWaitTime[3] },
-    arrivée: { arret: fastest[2], heure_arrivee: getHeureArrivee(fastest[0], fastest[2]) }
-  };
+function getHeurearriveStaticEscale(trip_id, arretfinal,arretinitial) {
+  var correspondance = getTripsWithArrets(trip_id, arretfinal,arretinitial)
+  if (correspondance.length != 0) {
+    var fastest = getFastestCorrespondance(correspondance)
+    var leastWaitTime = getLeastWaitTime(fastest[1])
+    var trajetLeger = {
+      status: { withCorrespondance: true },
+      premier: { trip_id, arret_id: leastWaitTime[0], heure_arrivee: leastWaitTime[1] },
+      correspondance: { trip_id: fastest[0], arret_id: leastWaitTime[2], heure_départ: leastWaitTime[3] },
+      arrivée: { arret: fastest[2], heure_arrivee: getHeureArrivee(fastest[0], fastest[2]) }
+    };
 
-  return trajetLeger
-}
-return undefined
+    return trajetLeger
+  }
+  return undefined
 }
 
 /**
@@ -468,164 +475,192 @@ return undefined
  * @param {string} arretfinal - L'arrêt final.
  * @returns {Array} - Un tableau de trajets avec des arrêts communs. de la forme [tripId, [arretCommun, heureArrivee, heureDepart]]
  */
-function getTripsWithArrets(tripIdDepart, arretfinal) {
+function getTripsWithArrets(tripIdDepart, arretfinal, arretinitial) {
   const trips = [];
   const arretsDepartName = getListArretStaticName(tripIdDepart);
-  const arretsDepart = getListArretStatic(tripIdDepart);  
+  const arretsDepart = getListArretStatic(tripIdDepart);
+  const stopswithsequenceSDepart = getListArretStaticWithSequence(tripIdDepart);
+  const stopsequenceDepart = getStopsequence(stopswithsequenceSDepart, getStopName(dataStops, arretinitial))
 
   for (const trip of dataTrip) {
     const tripId = trip.trip_id;
     const stopswithsequence = getListArretStaticWithSequence(tripId);
     const stopsName = getListArretStaticName(tripId);
     const stopsId = getListArretStatic(tripId);
-   var stop_sequence_finale = -1
+    var stop_sequence_finale = -1
+    //const heureDepartInit = heureToDateTime(getHeureArrivee(tripIdDepart, commonArretsFinal1[0]));
+   // const heureArriveeFin = heureToDateTime(getHeureDepart(tripId, commonArretsFinal2[0]));
+    const heureArriveeFin=heureToDateTime(getHeureArrivee(tripId, arretfinal))
+    const heureDepartInit=heureToDateTime(getHeureDepart(tripIdDepart, arretinitial))
+    if(heureDepartInit.getTime()<heureArriveeFin.getTime()){
 
 
-    
     if (stopsName.includes(getStopName(dataStops, arretfinal))) {
       stop_sequence_finale = getStopsequence(stopswithsequence, getStopName(dataStops, arretfinal))
     }
-    
-    if (stop_sequence_finale>=0  && stopsName.some(stop => arretsDepartName.includes(stop))) {
 
+    if (stop_sequence_finale >= 0 && stopsName.some(stop => arretsDepartName.includes(stop))) {
       const commonArrets = stopsName.filter(stop => arretsDepartName.includes(stop));
-      var commonArrets1=convertCommonNameToId(commonArrets,arretsDepartName,arretsDepart)
-      var commonArrets2=convertCommonNameToId(commonArrets,stopsName,stopsId)
+      var commonArrets1 = convertCommonNameToId(commonArrets, arretsDepartName, arretsDepart)
+      var commonArrets2 = convertCommonNameToId(commonArrets, stopsName, stopsId)
 
 
-      if (parseInt(stop_sequence_finale) >= parseInt(getStopsequence(stopswithsequence, getStopName(dataStops,commonArrets2[0])))) {
+          var commonArretsFinal1 = []
+          var commonArretsFinal2 = []
+          
+          for (const arret of commonArrets) {
+            if (parseInt(getStopsequence(stopswithsequenceSDepart, arret)) > parseInt(stopsequenceDepart)) {
+              commonArretsFinal1.push(commonArrets1[commonArrets.indexOf(arret)])
+              commonArretsFinal2.push(commonArrets2[commonArrets.indexOf(arret)])
+            }
+          }
 
 
-        const heureArriveeTrip1 = heureToDateTime(getHeureArrivee(tripIdDepart, commonArrets1[0]));
-        const heureDepartTrip2 = heureToDateTime(getHeureDepart(tripId, commonArrets2[0]));
+          if (commonArretsFinal1.length > 0) {
+            if (parseInt(stop_sequence_finale) >= parseInt(getStopsequence(stopswithsequence, getStopName(dataStops, commonArretsFinal2[0])))) {
 
-        if (heureDepartTrip2.getTime() > heureArriveeTrip1.getTime() && heureDepartTrip2.getTime() < heureArriveeTrip1.getTime() + decalage30) {
-          const fin=stopsId[(stopsName.indexOf(getStopName(dataStops, arretfinal)))]
-          trips.push([tripId, getCommonArretInfo(tripIdDepart, tripId,commonArrets1,commonArrets2),fin]);
+            const heureArriveeTrip1 = heureToDateTime(getHeureArrivee(tripIdDepart, commonArretsFinal1[0]));
+            const heureDepartTrip2 = heureToDateTime(getHeureDepart(tripId, commonArretsFinal2[0]));
+
+            if (heureDepartTrip2.getTime() > heureArriveeTrip1.getTime() && heureDepartTrip2.getTime() < heureArriveeTrip1.getTime() + decalage30) {
+            console.log("tripId",tripId)
+            console.log("commonArrets name", commonArrets)
+            console.log("commonArrets", commonArretsFinal1, commonArretsFinal2)
+            console.log("heurearrivee", heureArriveeTrip1)
+            console.log("heuredepart", heureDepartTrip2)
+            console.log("heureArriveeFin",heureArriveeFin)
+            console.log("heureDepartInit",heureDepartInit)
+            console.log("commonArrets2[0]",commonArrets2[0])
+            console.log("stop_sequence_commonArrets2[0]",getStopsequence(stopswithsequence, getStopName(dataStops, commonArrets2[0])))
+            console.log("stop_sequence_finale",stop_sequence_finale)
+            console.log("")
+            const fin = stopsId[(stopsName.indexOf(getStopName(dataStops, arretfinal)))]
+            trips.push([tripId, getCommonArretInfo(tripIdDepart, tripId, commonArretsFinal1, commonArretsFinal2), fin]);
+          }
 
         }
       }
     }
   }
-    return trips;
+}
+  return trips;
+}
+
+
+
+/**
+ * Retourne un tableau des arrêts communs entre deux trajets.
+ *
+ * @param {string} trip_id1 - L'ID du premier trajet.
+ * @param {string} trip_id2 - L'ID du deuxième trajet.
+ * @returns {Array} - Un tableau des arrêts communs entre les deux trajets.
+ */
+function getCommonArretInfo(trip_id1, trip_id2, arrets1, arrets2) {
+  var vRet = []
+  for (let step = 0; step < arrets1.length; step++) {
+    vRet.push([arrets1[step], getHeureArrivee(trip_id1, arrets1[step]), arrets2[step], getHeureDepart(trip_id2, arrets2[step])]);
   }
+  return vRet;
 
 
-
-  /**
-   * Retourne un tableau des arrêts communs entre deux trajets.
-   *
-   * @param {string} trip_id1 - L'ID du premier trajet.
-   * @param {string} trip_id2 - L'ID du deuxième trajet.
-   * @returns {Array} - Un tableau des arrêts communs entre les deux trajets.
-   */
-  function getCommonArretInfo(trip_id1,trip_id2,arrets1, arrets2) {
-    var vRet = []
-    for (let step = 0; step < arrets1.length; step++) {
-      vRet.push([arrets1[step], getHeureArrivee(trip_id1, arrets1[step]),arrets2[step], getHeureDepart(trip_id2, arrets2[step])]);
-    }
-    return vRet;
-    
-    
-    }
-  
-
-  /**
-   * Récupère l'heure d'arrivée d'un trajet à un arrêt spécifique.
-   * @param {string} trip_id - L'identifiant du trajet.
-   * @param {string} arret - L'identifiant de l'arrêt.
-   * @returns {Array<string>} - Un tableau contenant les heures d'arrivée correspondantes.
-   */
-  function getHeureArrivee(trip_id, arret) {
-
-    return dataStopTime.filter(entity => entity.trip_id === trip_id && entity.stop_id === arret).map(entity => entity.arrival_time);
+}
 
 
-  }
+/**
+ * Récupère l'heure d'arrivée d'un trajet à un arrêt spécifique.
+ * @param {string} trip_id - L'identifiant du trajet.
+ * @param {string} arret - L'identifiant de l'arrêt.
+ * @returns {Array<string>} - Un tableau contenant les heures d'arrivée correspondantes.
+ */
+function getHeureArrivee(trip_id, arret) {
 
-  /**
-   * Récupère l'heure de départ pour un trajet et un arrêt donnés.
-   * @param {string} trip_id - L'ID du trajet.
-   * @param {string} arret - L'ID de l'arrêt.
-   * @returns {Array<string>} - Un tableau d'heures de départ.
-   */
-  function getHeureDepart(trip_id, arret) {
+  return dataStopTime.filter(entity => entity.trip_id === trip_id && entity.stop_id === arret).map(entity => entity.arrival_time);
 
-    return dataStopTime
-      .filter(entity => entity.trip_id === trip_id && entity.stop_id === arret)
-      .map(entity => entity.departure_time);
-  }
 
-  /**
-   * Convertit une chaîne de caractères représentant une heure en un objet Date JavaScript.
-   * @param {string} heure - La chaîne de caractères représentant l'heure.
-   * @returns {Date} - L'objet Date correspondant à l'heure spécifiée.
-   */
+}
 
-  function heureToDateTime(heure) {
-    return new Date(hourstring + heure);
-  }
-  /**
-   * Renvoie la correspondance la plus rapide parmi une liste de correspondances.
-   *
-   * @param {Array} correspondance - La liste des correspondances.
-   * @returns {Array} La correspondance la plus rapide.
-   */
-  function getFastestCorrespondance(correspondance) {
-    var fastest = correspondance[0]
-    for (const corresp of correspondance) {
-      if (heureToDateTime(corresp[1][0][3]) < heureToDateTime(fastest[1][0][3])) {
-        fastest = corresp
-      }
-    }
+/**
+ * Récupère l'heure de départ pour un trajet et un arrêt donnés.
+ * @param {string} trip_id - L'ID du trajet.
+ * @param {string} arret - L'ID de l'arrêt.
+ * @returns {Array<string>} - Un tableau d'heures de départ.
+ */
+function getHeureDepart(trip_id, arret) {
 
-    return fastest
-  }
-  /**
-   * Retourne l'arrêt avec le temps d'attente le plus court.
-   *
-   * @param {Array} Arraylist - La liste des arrêts.
-   * @returns {Array} L'arrêt avec le temps d'attente le plus court.
-   */
+  return dataStopTime
+    .filter(entity => entity.trip_id === trip_id && entity.stop_id === arret)
+    .map(entity => entity.departure_time);
+}
 
-  function getLeastWaitTime(Arraylist) {
+/**
+ * Convertit une chaîne de caractères représentant une heure en un objet Date JavaScript.
+ * @param {string} heure - La chaîne de caractères représentant l'heure.
+ * @returns {Date} - L'objet Date correspondant à l'heure spécifiée.
+ */
 
-    var durée = heureToDateTime(Arraylist[0][2]) - heureToDateTime(Arraylist[0][1])
-
-    var fastest = Arraylist[0]
-    for (const arret of Arraylist) {
-      if (heureToDateTime(arret[2]) - heureToDateTime(arret[1]) < durée) {
-        durée = heureToDateTime(arret[2]) - heureToDateTime(arret[1])
-        fastest = arret
-      }
-    }
-    return (fastest)
-  }
-
-  function getStopsequence(listarret, arret) {
-    for (const a of listarret) {
-      if (a[0] == arret) {
-        return a[1]
-      }
+function heureToDateTime(heure) {
+  return new Date(hourstring + heure);
+}
+/**
+ * Renvoie la correspondance la plus rapide parmi une liste de correspondances.
+ *
+ * @param {Array} correspondance - La liste des correspondances.
+ * @returns {Array} La correspondance la plus rapide.
+ */
+function getFastestCorrespondance(correspondance) {
+  var fastest = correspondance[0]
+  for (const corresp of correspondance) {
+    if (heureToDateTime(corresp[1][0][3]) < heureToDateTime(fastest[1][0][3])) {
+      fastest = corresp
     }
   }
-  function convertCommonNameToId(listToConvert,listArretName,listArretId){
-    var listId=[]
-    listToConvert.forEach(element => {
-      listId.push(listArretId[listArretName.indexOf(element)])
-    });
-    return listId
 
-  }
+  return fastest
+}
+/**
+ * Retourne l'arrêt avec le temps d'attente le plus court.
+ *
+ * @param {Array} Arraylist - La liste des arrêts.
+ * @returns {Array} L'arrêt avec le temps d'attente le plus court.
+ */
 
-  export async function getAllArretName(){
-    var arretName=[]
-    dataStops.forEach(element => {
-      if(!arretName.includes(element.stop_name))
-      {
-        arretName.push(element.stop_name)
-      }
-      
-    });
-    return arretName
+function getLeastWaitTime(Arraylist) {
+
+  var durée = heureToDateTime(Arraylist[0][2]) - heureToDateTime(Arraylist[0][1])
+
+  var fastest = Arraylist[0]
+  for (const arret of Arraylist) {
+    if (heureToDateTime(arret[2]) - heureToDateTime(arret[1]) < durée) {
+      durée = heureToDateTime(arret[2]) - heureToDateTime(arret[1])
+      fastest = arret
+    }
   }
+  return (fastest)
+}
+
+function getStopsequence(listarret, arret) {
+  for (const a of listarret) {
+    if (a[0] == arret) {
+      return a[1]
+    }
+  }
+}
+function convertCommonNameToId(listToConvert, listArretName, listArretId) {
+  var listId = []
+  listToConvert.forEach(element => {
+    listId.push(listArretId[listArretName.indexOf(element)])
+  });
+  return listId
+
+}
+
+export async function getAllArretName() {
+  var arretName = []
+  dataStops.forEach(element => {
+    if (!arretName.includes(element.stop_name)) {
+      arretName.push(element.stop_name)
+    }
+
+  });
+  return arretName
+}
