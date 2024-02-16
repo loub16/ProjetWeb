@@ -54,9 +54,9 @@ app.get('/getTransport', async (req, res) => {
   })
 });
 
-//example=> http://localhost:3000/getTrajet?idTrip=5369904&arretName=Foch-Haras
+//example=> http://localhost:3000/getTrajet?idTrip=5369904&arretName=Foch-Haras&arretinitial=NDAMLA-E
 app.get('/getTrajet', async (req, res) => {
-  var list=getTrajetInAllTrip(req.query.idTrip,req.query.arretName).then((value) => {
+  var list=getTrajetInAllTrip(req.query.idTrip,req.query.arretName,req.query.arretinitial).then((value) => {
     res.json(value)
   })
 });
