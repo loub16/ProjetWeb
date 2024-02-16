@@ -359,9 +359,6 @@ function getTrajet(trip_id, arret) {
 export async function getTrajetInAllTrip(trip_id, nomArret) {
   const arretIds=  getStopId(dataStops, nomArret)
   var trips = []
-  /*for (const arretId of arretIds) {
-    trips.push(getTrajet(trip_id, arretId))
-  }*/
   trips.push(getTrajet(trip_id, nomArret))
   var fastestindex = 0
   var fastesthour = heureToDateTime(trips[0].arrivée.heure_arrivee)
@@ -388,22 +385,6 @@ function tripLegerToTripInfo(tripLeger) {
       changement = true
     }
   }
-/*
-  var tripInfo = {
-    status: { withCorrespondance: tripLeger.status.withCorrespondance },
-    premier: {
-      trip: { trip_id: tripLeger.premier.trip_id, trip_headsign: info_trip[0], routeId: info_trip[1], route_name: info_route[0], route_color: info_route[1] },
-      arret: { arret: getStopName(dataStops, tripLeger.premier.arret_id), heure_arrivee: tripLeger.premier.heure_arrivee, arretId: tripLeger.premier.arret_id },
-      changement: changement
-    },
-    correspondance: {
-      trip: { trip_id: tripLeger.correspondance.trip_id, trip_headsign: info_trip2[0], routeId: info_trip2[1], route_name: info_route2[0], route_color: info_route2[1] },
-      arret: { arret: getStopName(dataStops, tripLeger.correspondance.arret), heure_depart: tripLeger.correspondance.heure_départ,arretId: tripLeger.correspondance.arret}
-    },
-    arrivée: { arret: getStopName(dataStops, tripLeger.arrivée.arret), heure_arrivee: tripLeger.arrivée.heure_arrivee }
-  }*/
-
-
   var tripInfo = {}
   tripInfo.status = { withCorrespondance: tripLeger.status.withCorrespondance }
   tripInfo.premier = {
@@ -414,7 +395,7 @@ function tripLegerToTripInfo(tripLeger) {
   if(tripLeger.status.withCorrespondance){
     tripInfo.correspondance = {
       trip: { trip_id: tripLeger.correspondance.trip_id, trip_headsign: info_trip2[0], routeId: info_trip2[1], route_name: info_route2[0], route_color: info_route2[1] },
-      arret: { arret: getStopName(dataStops, tripLeger.correspondance.arret), heure_depart: tripLeger.correspondance.heure_départ,arretId: tripLeger.correspondance.arret}
+      arret: { arret: getStopName(dataStops, tripLeger.correspondance.arret_id), heure_depart: tripLeger.correspondance.heure_départ,arretId: tripLeger.correspondance.arret_id}
     }
   }
   tripInfo.arrivée = { arret: getStopName(dataStops, tripLeger.arrivée.arret), heure_arrivee: tripLeger.arrivée.heure_arrivee }
@@ -635,5 +616,3 @@ function getTripsWithArrets(tripIdDepart, arretfinal) {
     });
     return arretName
   }
-
-  getAllArretName()
