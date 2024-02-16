@@ -149,13 +149,15 @@ function getFormattedDate() {
  * @returns timestamp (int)
  */
 function dateToTimestamp(date,time) {
-    const dateTime = new Date(date);
+    const dateTime = new Date();
+    dateTime.setFullYear(date.getFullYear());
+    dateTime.setMonth(date.getMonth());
+    dateTime.setDate(date.getDate());
     timeSplit = time.split(':');
     dateTime.setHours(timeSplit[0]);
     dateTime.setMinutes(timeSplit[1]);
     dateTime.setSeconds(timeSplit[2]);
     dateTime.setMilliseconds(0);
-    // Get the timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)
     const timestamp = dateTime.getTime();
     return timestamp;
 }
