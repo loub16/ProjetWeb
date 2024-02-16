@@ -54,7 +54,7 @@ app.get('/getTransport', async (req, res) => {
   })
 });
 
-//example=> http://localhost:3000/getTrajet?idTrip=5369904&arretName=HARAS
+//example=> http://localhost:3000/getTrajet?idTrip=5369904&arretName=Foch-Haras
 app.get('/getTrajet', async (req, res) => {
   var list=getTrajetInAllTrip(req.query.idTrip,req.query.arretName).then((value) => {
     res.json(value)
