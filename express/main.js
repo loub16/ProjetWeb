@@ -5,9 +5,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentDate = new Date().toISOString().split('T')[0];
     // Set the minimum date for the calendar input
     document.getElementById('calendar').setAttribute('min', currentDate);
-    // Get the id of the student from the url
-    const searchParams = new URLSearchParams(window.location.search);
-    const id = searchParams.get('id');
+    // Get the user ID from the local storage
+    const id = localStorage.getItem("userId");
     // Get the timetable of the student
     const [firstday, lastday] = getFirstAndLastDayOfCurrentWeek();
     const edt = await fetchEdt(id, firstday, lastday);
@@ -32,6 +31,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const lastLessonHour = getLastLessonHour(edt, rearrangedDate);
             document.getElementById('heureCours').textContent = lastLessonHour;
             document.getElementById('date').textContent = formatDate(new Date(selectedDate));
+            // Actulaize the transport hour on change of the date
+            const sensB = document.getElementById('sensB');
+            const sensT = document.getElementById('sensT');
+            if(sensB != null){
+                setTransportHour(sensB.value);
+            }
+            if(sensT != null){
+                setTransportHour(sensT.value);
+            }
         })();    
     });
 });
@@ -142,16 +150,13 @@ function getFormattedDate() {
  */
 function dateToTimestamp(date,time) {
     const dateTime = new Date(date);
-    console.log("date avant time: " + dateTime)
     timeSplit = time.split(':');
     dateTime.setHours(timeSplit[0]);
     dateTime.setMinutes(timeSplit[1]);
     dateTime.setSeconds(timeSplit[2]);
     dateTime.setMilliseconds(0);
-    console.log("date avec time: " + dateTime)
     // Get the timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)
     const timestamp = dateTime.getTime();
-    console.log("timestamp: " + timestamp)
     return timestamp;
 }
 
@@ -293,21 +298,25 @@ async function setTransportHour(sens){
         const busHour = getBusHour(bus);
         const arretHour = sens == 'SB' ? busHour[0] : busHour[1];
         document.getElementById('heureBus').textContent = arretHour;
+        document.getElementById('text1').removeAttribute("hidden");
     }else if(sens == 'BS' || sens == 'AB'){
         const bus = await fetchTransport("NDAMLA-E",document.getElementById('heureCours').textContent);
         const busHour = getBusHour(bus);
         const arretHour = sens == 'BS' ? busHour[0] : busHour[1];
         document.getElementById('heureBus').textContent = arretHour;
+        document.getElementById('text1').removeAttribute("hidden");
     }else if(sens == 'BR' || sens == 'BM'){
         const tram = await fetchTransport("1BEAU",document.getElementById('heureCours').textContent);
         const tramHour = getTramHour(tram);
         const arretHour = sens == 'BM' ? tramHour[0] : tramHour[1];
         document.getElementById('heureTram').textContent = arretHour;
+        document.getElementById('text2').removeAttribute("hidden");
     }else if(sens == 'RB' || sens == 'MB'){
         const tram = await fetchTransport("2BEAU",document.getElementById('heureCours').textContent);
         const tramHour = getTramHour(tram);
         const arretHour = sens == 'MB' ? tramHour[0] : tramHour[1];
         document.getElementById('heureTram').textContent = arretHour;
+        document.getElementById('text2').removeAttribute("hidden");
     }
     
 }
