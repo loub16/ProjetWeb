@@ -155,7 +155,7 @@ async function getTransportAtStatic(arret, heureDepart, nbParligne) {
     if (entity.stop_id === arret && datetrajet.getTime() >= heuredep.getTime() && datetrajet.getTime() <= heuredep1.getTime()) {
       const [headsign, idLigne] = getInfoTrip(dataTrip, entity.trip_id);
       const [route_name, route_color] = getInfoRoute(dataRoute, idLigne)
-      dict[entity.trip_id] = { routeId: idLigne, routeName: route_name, headsign: headsign, arrival: entity.arrival_time, color: route_color };
+      dict[entity.trip_id] = { routeId: idLigne, routeName: route_name, headsign: headsign, arrival: entity.arrival_time, color: route_color,tripId:entity.tripUpdate.trip.tripId };
     }
   });
   //décommenter pour exporter le fichier
