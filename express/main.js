@@ -1,5 +1,7 @@
  //Variables
  var selectedDate = new Date();
+ var idTripB;
+ var idTripT;
 document.addEventListener('DOMContentLoaded', async () => {
     //set the minimum date of the calendar to the current date
     const currentDate = new Date().toISOString().split('T')[0];
@@ -42,6 +44,59 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         })();    
     });
+
+    // Search bar and autocompletion
+    const responseArrets = await fetch('http://localhost:3000/getAllArretName');
+    const data = await responseArrets.json();
+    const searchInputB = document.getElementById('searchInputB');
+    const autocompleteContainerB = document.getElementById('autocompleteContainerB');
+    const searchInputT = document.getElementById('searchInputT');
+    const autocompleteContainerT = document.getElementById('autocompleteContainerT');
+
+    // Event listener for input changes
+    searchInputB.addEventListener('input', function() {
+        const inputValue = this.value;
+        const filteredData = filterData(inputValue);
+        displaySuggestions(filteredData, autocompleteContainerB);
+    });
+    
+    // Event delegation for selecting suggestion
+    autocompleteContainerB.addEventListener('click', function(event) {
+        const clickedElement = event.target;
+        if (clickedElement.classList.contains('suggestion')) {
+            searchInputB.value = clickedElement.textContent;
+            fetchTrajet("B");
+            autocompleteContainerB.innerHTML = ''; // Clear autocomplete suggestions
+        }
+    });
+
+    // Event listener for input changes
+    searchInputT.addEventListener('input', function() {
+        const inputValue = this.value;
+        const filteredData = filterData(inputValue);
+        displaySuggestions(filteredData, autocompleteContainerT);
+    });
+    
+    // Event delegation for selecting suggestion
+    autocompleteContainerT.addEventListener('click', function(event) {
+        const clickedElement = event.target;
+        if (clickedElement.classList.contains('suggestion')) {
+        searchInputT.value = clickedElement.textContent;
+        fetchTrajet("T");
+        autocompleteContainerT.innerHTML = ''; // Clear autocomplete suggestions
+        }
+    });
+    
+    // Function to filter data based on user input
+    function filterData(input) {
+        return data.filter(item => item.toLowerCase().includes(input.toLowerCase()));
+    }
+
+    // Function to display autocomplete suggestions
+    function displaySuggestions(suggestions, autocompleteContainer) {
+        const html = suggestions.map(suggestion => `<div class="suggestion">${suggestion}</div>`).join('');
+        autocompleteContainer.innerHTML = html;
+    }
 });
 
 
@@ -301,24 +356,40 @@ async function setTransportHour(sens){
         const arretHour = sens == 'SB' ? busHour[0] : busHour[1];
         document.getElementById('heureBus').textContent = arretHour;
         document.getElementById('text1').removeAttribute("hidden");
+        document.getElementById('destinationB').removeAttribute("hidden");
+        document.getElementById('searchInputB').removeAttribute("hidden");
     }else if(sens == 'BS' || sens == 'AB'){
         const bus = await fetchTransport("NDAMLA-E",document.getElementById('heureCours').textContent);
         const busHour = getBusHour(bus);
         const arretHour = sens == 'BS' ? busHour[0] : busHour[1];
         document.getElementById('heureBus').textContent = arretHour;
         document.getElementById('text1').removeAttribute("hidden");
+        document.getElementById('destinationB').removeAttribute("hidden");
+        document.getElementById('searchInputB').removeAttribute("hidden");
     }else if(sens == 'BR' || sens == 'BM'){
         const tram = await fetchTransport("1BEAU",document.getElementById('heureCours').textContent);
         const tramHour = getTramHour(tram);
         const arretHour = sens == 'BM' ? tramHour[0] : tramHour[1];
         document.getElementById('heureTram').textContent = arretHour;
         document.getElementById('text2').removeAttribute("hidden");
+        document.getElementById('destinationT').removeAttribute("hidden");
+        document.getElementById('searchInputT').removeAttribute("hidden");
     }else if(sens == 'RB' || sens == 'MB'){
         const tram = await fetchTransport("2BEAU",document.getElementById('heureCours').textContent);
         const tramHour = getTramHour(tram);
         const arretHour = sens == 'MB' ? tramHour[0] : tramHour[1];
         document.getElementById('heureTram').textContent = arretHour;
         document.getElementById('text2').removeAttribute("hidden");
+        document.getElementById('destinationT').removeAttribute("hidden");
+        document.getElementById('searchInputT').removeAttribute("hidden");
     }
     
+}
+
+async function fetchTrajet(transport){
+    const destination = transport == "B" ? document.getElementById('searchInputB').value : document.getElementById('searchInputB').value;
+    const idTrip = transport == "B" ? idTripB : idTripT;
+    const response = await fetch("http://localhost:3000/getTrajet?idTrip=" + idTrip + "arretName=" + destination);
+    const trajet = await response.json();
+    console.log(trajet);
 }
