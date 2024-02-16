@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // Get the id of the student from the url
-    //const searchParams = new URLSearchParams(window.location.search);
-    //const id = searchParams.get('id');
+    // Get the user ID from the local storage
     const id = localStorage.getItem("userId");
     // Get the timetable of the student
     const [firstday, lastday] = getFirstAndLastDayOfCurrentWeek();
@@ -27,6 +25,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             const lastLessonHour = getLastLessonHour(edt, rearrangedDate);
             document.getElementById('heureCours').textContent = lastLessonHour;
             document.getElementById('date').textContent = formatDate(new Date(selectedDate));
+
+            // Actulaize the transport hour on change of the date
+            const sensB = document.getElementById('sensB');
+            const sensT = document.getElementById('sensT');
+            if(sensB != null){
+                setTransportHour(sensB.value);
+            }
+            if(sensT != null){
+                setTransportHour(sensT.value);
+            }
+            
+
         })();   
     });
 });
