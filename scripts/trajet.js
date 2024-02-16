@@ -621,7 +621,11 @@ function getTripsWithArrets(tripIdDepart, arretfinal) {
   export async function getAllArretName(){
     var arretName=[]
     dataStops.forEach(element => {
-      arretName.push(element.stop_name)
+      if(!arretName.includes(element.stop_name))
+      {
+        arretName.push(element.stop_name)
+      }
+      
     });
     return arretName
   }
