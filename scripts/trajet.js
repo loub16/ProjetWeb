@@ -488,6 +488,11 @@ function getTripsWithArrets(tripIdDepart, arretfinal, arretinitial) {
     const stopsName = getListArretStaticName(tripId);
     const stopsId = getListArretStatic(tripId);
     var stop_sequence_finale = -1
+    //const heureDepartInit = heureToDateTime(getHeureArrivee(tripIdDepart, commonArretsFinal1[0]));
+   // const heureArriveeFin = heureToDateTime(getHeureDepart(tripId, commonArretsFinal2[0]));
+    const heureArriveeFin=heureToDateTime(getHeureArrivee(tripId, arretfinal))
+    const heureDepartInit=heureToDateTime(getHeureDepart(tripIdDepart, arretinitial))
+    if(heureDepartInit.getTime()<heureArriveeFin.getTime()){
 
 
     if (stopsName.includes(getStopName(dataStops, arretfinal))) {
@@ -498,12 +503,11 @@ function getTripsWithArrets(tripIdDepart, arretfinal, arretinitial) {
       const commonArrets = stopsName.filter(stop => arretsDepartName.includes(stop));
       var commonArrets1 = convertCommonNameToId(commonArrets, arretsDepartName, arretsDepart)
       var commonArrets2 = convertCommonNameToId(commonArrets, stopsName, stopsId)
-      if (parseInt(stop_sequence_finale) >= parseInt(getStopsequence(stopswithsequence, getStopName(dataStops, commonArrets2[0])))) {
-        const heureArriveeTrip1 = heureToDateTime(getHeureArrivee(tripIdDepart, commonArrets1[0]));
-        const heureDepartTrip2 = heureToDateTime(getHeureDepart(tripId, commonArrets2[0]));
-        if (heureDepartTrip2.getTime() > heureArriveeTrip1.getTime() && heureDepartTrip2.getTime() < heureArriveeTrip1.getTime() + decalage30) {
+
+
           var commonArretsFinal1 = []
           var commonArretsFinal2 = []
+          
           for (const arret of commonArrets) {
             if (parseInt(getStopsequence(stopswithsequenceSDepart, arret)) > parseInt(stopsequenceDepart)) {
               commonArretsFinal1.push(commonArrets1[commonArrets.indexOf(arret)])
@@ -511,7 +515,25 @@ function getTripsWithArrets(tripIdDepart, arretfinal, arretinitial) {
             }
           }
 
+
           if (commonArretsFinal1.length > 0) {
+            if (parseInt(stop_sequence_finale) >= parseInt(getStopsequence(stopswithsequence, getStopName(dataStops, commonArretsFinal2[0])))) {
+
+            const heureArriveeTrip1 = heureToDateTime(getHeureArrivee(tripIdDepart, commonArretsFinal1[0]));
+            const heureDepartTrip2 = heureToDateTime(getHeureDepart(tripId, commonArretsFinal2[0]));
+
+            if (heureDepartTrip2.getTime() > heureArriveeTrip1.getTime() && heureDepartTrip2.getTime() < heureArriveeTrip1.getTime() + decalage30) {
+            console.log("tripId",tripId)
+            console.log("commonArrets name", commonArrets)
+            console.log("commonArrets", commonArretsFinal1, commonArretsFinal2)
+            console.log("heurearrivee", heureArriveeTrip1)
+            console.log("heuredepart", heureDepartTrip2)
+            console.log("heureArriveeFin",heureArriveeFin)
+            console.log("heureDepartInit",heureDepartInit)
+            console.log("commonArrets2[0]",commonArrets2[0])
+            console.log("stop_sequence_commonArrets2[0]",getStopsequence(stopswithsequence, getStopName(dataStops, commonArrets2[0])))
+            console.log("stop_sequence_finale",stop_sequence_finale)
+            console.log("")
             const fin = stopsId[(stopsName.indexOf(getStopName(dataStops, arretfinal)))]
             trips.push([tripId, getCommonArretInfo(tripIdDepart, tripId, commonArretsFinal1, commonArretsFinal2), fin]);
           }
@@ -520,6 +542,7 @@ function getTripsWithArrets(tripIdDepart, arretfinal, arretinitial) {
       }
     }
   }
+}
   return trips;
 }
 
