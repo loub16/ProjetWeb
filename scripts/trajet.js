@@ -113,7 +113,6 @@ async function getTransportAtRT(arret, nbParligne) {
     }
     saveJSON(ent, 'output');
     dict = extratXperLigne(dict, nbParligne)
-    console.log(dict)
     return dict
   }
   catch (error) {
