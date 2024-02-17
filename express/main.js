@@ -241,16 +241,20 @@ function getBusHour(transport){
     
     var busTime2 = 0;
     var busTime6 = 0;
+    var idTrip2;
+    var idTrip6;
     for (var key in transport) {
         if (transport.hasOwnProperty(key)) {
             if ((busTime2 == 0 || busTime2 > transport[key].arrival) && transport[key].routeId == "02" ) {
                 busTime2 = transport[key].arrival;
+                idTrip2 = transport[key].tripId;
             }else if((busTime6 == 0 || busTime6 > transport[key].arrival) && transport[key].routeId == "06"){
                 busTime6 = transport[key].arrival;
+                idTrip6 = transport[key].tripId;
             }
         }
     }
-    return [busTime2,busTime6];
+    return [busTime2,busTime6,idTrip2,idTrip6];
 }
 
 /** Get the next tram of line B and C
@@ -261,17 +265,22 @@ function getTramHour(transport){
     
     var tramTimeB = 0;
     var tramTimeC = 0;
+    var idTripB;
+    var idTripC;
     for (var key in transport) {
         if (transport.hasOwnProperty(key)) {
+            console.log("route id : " + transport[key].routeId);
             if ((tramTimeB == 0 || tramTimeB > transport[key].arrival) && transport[key].routeId == "B") {
                 tramTimeB = transport[key].arrival;
+                idTripB = transport[key].tripId;
             }else if((tramTimeC == 0 || tramTimeC > transport[key].arrival) && transport[key].routeId == "C"){
                 tramTimeC = transport[key].arrival;
+                idTripC = transport[key].tripId;
             }
         }
     }
 
-    return [tramTimeB,tramTimeC];
+    return [tramTimeB,tramTimeC,idTripB,idTripC];
 }
 
 
@@ -350,18 +359,20 @@ function ajoutMenuSens(ligne){
  * @param {String} sens direction of the route
  */
 async function setTransportHour(sens){
-    if(sens == 'SB' || sens == 'BA'){
+    if(sens == 'BS' || sens == 'BA'){
         const bus = await fetchTransport("NDAMELAC",document.getElementById('heureCours').textContent);
         const busHour = getBusHour(bus);
-        const arretHour = sens == 'SB' ? busHour[0] : busHour[1];
+        const arretHour = sens == 'BS' ? busHour[0] : busHour[1];
+        idTripB = sens == 'BS'? busHour[2] : busHour[3];
         document.getElementById('heureBus').textContent = arretHour;
         document.getElementById('text1').removeAttribute("hidden");
         document.getElementById('destinationB').removeAttribute("hidden");
         document.getElementById('searchInputB').removeAttribute("hidden");
-    }else if(sens == 'BS' || sens == 'AB'){
+    }else if(sens == 'SB' || sens == 'AB'){
         const bus = await fetchTransport("NDAMLA-E",document.getElementById('heureCours').textContent);
         const busHour = getBusHour(bus);
-        const arretHour = sens == 'BS' ? busHour[0] : busHour[1];
+        const arretHour = sens == 'SB' ? busHour[0] : busHour[1];
+        idTripB = sens == 'SB'? busHour[2] : busHour[3];
         document.getElementById('heureBus').textContent = arretHour;
         document.getElementById('text1').removeAttribute("hidden");
         document.getElementById('destinationB').removeAttribute("hidden");
@@ -370,6 +381,7 @@ async function setTransportHour(sens){
         const tram = await fetchTransport("1BEAU",document.getElementById('heureCours').textContent);
         const tramHour = getTramHour(tram);
         const arretHour = sens == 'BM' ? tramHour[0] : tramHour[1];
+        idTripT = sens == 'BM'? tramHour[2] : tramHour[3];
         document.getElementById('heureTram').textContent = arretHour;
         document.getElementById('text2').removeAttribute("hidden");
         document.getElementById('destinationT').removeAttribute("hidden");
@@ -378,6 +390,7 @@ async function setTransportHour(sens){
         const tram = await fetchTransport("2BEAU",document.getElementById('heureCours').textContent);
         const tramHour = getTramHour(tram);
         const arretHour = sens == 'MB' ? tramHour[0] : tramHour[1];
+        idTripT = sens == 'MB'? tramHour[2] : tramHour[3];
         document.getElementById('heureTram').textContent = arretHour;
         document.getElementById('text2').removeAttribute("hidden");
         document.getElementById('destinationT').removeAttribute("hidden");
@@ -387,9 +400,20 @@ async function setTransportHour(sens){
 }
 
 async function fetchTrajet(transport){
-    const destination = transport == "B" ? document.getElementById('searchInputB').value : document.getElementById('searchInputB').value;
+    const destination = transport == "B" ? document.getElementById('searchInputB').value : document.getElementById('searchInputT').value;
     const idTrip = transport == "B" ? idTripB : idTripT;
-    const response = await fetch("http://localhost:3000/getTrajet?idTrip=" + idTrip + "arretName=" + destination);
+    const response = await fetch("http://localhost:3000/getTrajet?idTrip=" + idTrip + "&arretName=" + destination);
     const trajet = await response.json();
-    console.log(trajet);
+    const withCorrespondance = trajet.status.withCorrespondance;
+    const heureArrivee = trajet.premier.arret.heure_arrivee[0];
+    if(!withCorrespondance){
+        switch(transport){
+            case "B":
+                document.getElementById('heureDestinationB').textContent = heureArrivee;
+                break;
+            case "T":
+                document.getElementById('heureDestinationT').textContent = heureArrivee;
+                break;
+        }
+    }
 }
