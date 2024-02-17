@@ -1,4 +1,10 @@
+ //Variables
+ var selectedDate = new Date();
 document.addEventListener('DOMContentLoaded', async () => {
+    //set the minimum date of the calendar to the current date
+    const currentDate = new Date().toISOString().split('T')[0];
+    // Set the minimum date for the calendar input
+    document.getElementById('calendar').setAttribute('min', currentDate);
     // Get the user ID from the local storage
     const id = localStorage.getItem("userId");
     // Get the timetable of the student
@@ -25,7 +31,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const lastLessonHour = getLastLessonHour(edt, rearrangedDate);
             document.getElementById('heureCours').textContent = lastLessonHour;
             document.getElementById('date').textContent = formatDate(new Date(selectedDate));
-
             // Actulaize the transport hour on change of the date
             const sensB = document.getElementById('sensB');
             const sensT = document.getElementById('sensT');
@@ -35,9 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(sensT != null){
                 setTransportHour(sensT.value);
             }
-            
-
-        })();   
+        })();    
     });
 });
 
@@ -141,20 +144,21 @@ function getFormattedDate() {
 }
 
 /** Convert a date in a timesamp
- * @param {string} date date to convert in format HH:MM:SS
+ * @param {string} date date to convert in format YYYY-MM-DD
+ * @param {string} time time to convert in format HH:MM:SS
  * @returns timestamp (int)
  */
-function dateToTimestamp(date) {
-    const currentDate = new Date();
-    dateSplit = date.split(':');
-
-    currentDate.setHours(dateSplit[0]);
-    currentDate.setMinutes(dateSplit[1]);
-    currentDate.setSeconds(dateSplit[2]);
-    currentDate.setMilliseconds(0);
-
-    // Get the timestamp in milliseconds since the Unix epoch (January 1, 1970 00:00:00 UTC)
-    const timestamp = currentDate.getTime();
+function dateToTimestamp(date,time) {
+    const dateTime = new Date();
+    dateTime.setFullYear(date.getFullYear());
+    dateTime.setMonth(date.getMonth());
+    dateTime.setDate(date.getDate());
+    timeSplit = time.split(':');
+    dateTime.setHours(timeSplit[0]);
+    dateTime.setMinutes(timeSplit[1]);
+    dateTime.setSeconds(timeSplit[2]);
+    dateTime.setMilliseconds(0);
+    const timestamp = dateTime.getTime();
     return timestamp;
 }
 
@@ -166,7 +170,7 @@ function dateToTimestamp(date) {
 async function fetchTransport(arret, lessonHour){
     try {
         //arret = (transport === "bus") ? "NDAMELAC" : "1BEAU";
-        const response = await fetch('http://localhost:3000/getTransport?arret=' + arret + '&heure=' + dateToTimestamp(lessonHour));
+        const response = await fetch('http://localhost:3000/getTransport?arret=' + arret + '&heure=' + dateToTimestamp(selectedDate,lessonHour));
         const bus = await response.json();
         return bus;
     }catch (error) {
