@@ -334,15 +334,15 @@ function getListArretStatic(trip_id) {
  * @param {string} arret - L'arrêt à vérifier.
  * @returns {boolean} - True si l'arrêt fait partie du trajet, sinon False.
  */
-function isArretOnTripStatic(trip_id, arret,arretinitial) {
-  const listarret= getListArretStatic(trip_id);
-  if(getListArretStatic(trip_id).includes(arret)){
-  const iarretinitial=listarret.indexOf(arretinitial)
-  const iarretfinal=listarret.indexOf(arret)
-  return iarretinitial<iarretfinal
+function isArretOnTripStatic(trip_id, arret, arretinitial) {
+  const listarret = getListArretStatic(trip_id);
+  if (getListArretStatic(trip_id).includes(arret)) {
+    const iarretinitial = listarret.indexOf(arretinitial)
+    const iarretfinal = listarret.indexOf(arret)
+    return iarretinitial < iarretfinal
   }
   return false
- // return getListArretStatic(trip_id).includes(arret);
+  // return getListArretStatic(trip_id).includes(arret);
 }
 
 
@@ -352,21 +352,21 @@ function isArretOnTripStatic(trip_id, arret,arretinitial) {
  * @param {string} arret - L'arrêt du trajet.
  * @returns {string} - L'heure d'arrivée du trajet.
  */
-function getTrajet(trip_id, arret,arretinitial) {
+function getTrajet(trip_id, arret, arretinitial) {
   var arretids = getStopId(dataStops, arret)
   for (const arretId of arretids) {
-    if (isArretOnTripStatic(trip_id, arretId,arretinitial)) {
+    if (isArretOnTripStatic(trip_id, arretId, arretinitial)) {
       return getHeurearriveStaticDirecte(trip_id, arretId)
     }
   }
-  return getHeurearriveStaticEscale(trip_id, arretids[0],arretinitial);
+  return getHeurearriveStaticEscale(trip_id, arretids[0], arretinitial);
 
 }
 
-export async function getTrajetInAllTrip(trip_id, nomArret,arretinitial) {
+export async function getTrajetInAllTrip(trip_id, nomArret, arretinitial) {
   const arretIds = getStopId(dataStops, nomArret)
   var trips = []
-  trips.push(getTrajet(trip_id, nomArret,arretinitial))
+  trips.push(getTrajet(trip_id, nomArret, arretinitial))
   var fastestindex = 0
 
   if (trips[0] != undefined) {
@@ -451,8 +451,8 @@ function getHeurearriveStaticDirecte(trip_id, arret) {
  * @param {string} arretfinal - L'identifiant de l'arrêt final.
  * @returns {Object} - Un objet contenant les détails du trajet léger, incluant les heures d'arrivée.
  */
-function getHeurearriveStaticEscale(trip_id, arretfinal,arretinitial) {
-  var correspondance = getTripsWithArrets(trip_id, arretfinal,arretinitial)
+function getHeurearriveStaticEscale(trip_id, arretfinal, arretinitial) {
+  var correspondance = getTripsWithArrets(trip_id, arretfinal, arretinitial)
   if (correspondance.length != 0) {
     var fastest = getFastestCorrespondance(correspondance)
     var leastWaitTime = getLeastWaitTime(fastest[1])
@@ -481,68 +481,49 @@ function getTripsWithArrets(tripIdDepart, arretfinal, arretinitial) {
   const arretsDepart = getListArretStatic(tripIdDepart);
   const stopswithsequenceSDepart = getListArretStaticWithSequence(tripIdDepart);
   const stopsequenceDepart = getStopsequence(stopswithsequenceSDepart, getStopName(dataStops, arretinitial))
+  const heureDepartInit = heureToDateTime(getHeureDepart(tripIdDepart, arretinitial))
+  var i = 0
+  if (arretsDepart.includes(arretinitial)) {
 
-  for (const trip of dataTrip) {
-    const tripId = trip.trip_id;
-    const stopswithsequence = getListArretStaticWithSequence(tripId);
-    const stopsName = getListArretStaticName(tripId);
-    const stopsId = getListArretStatic(tripId);
-    var stop_sequence_finale = -1
-    //const heureDepartInit = heureToDateTime(getHeureArrivee(tripIdDepart, commonArretsFinal1[0]));
-   // const heureArriveeFin = heureToDateTime(getHeureDepart(tripId, commonArretsFinal2[0]));
-    const heureArriveeFin=heureToDateTime(getHeureArrivee(tripId, arretfinal))
-    const heureDepartInit=heureToDateTime(getHeureDepart(tripIdDepart, arretinitial))
-    if(heureDepartInit.getTime()<heureArriveeFin.getTime()){
+    for (const trip of dataTrip) {
+      const tripId = trip.trip_id;
+      const stopsId = getListArretStatic(tripId);
+      if (!stopsId.includes(arretfinal)) {
+        continue
+      }
+      if (heureDepartInit.getTime() > heureToDateTime(getHeureArrivee(tripId, arretfinal)).getTime()) {
+        continue
+      }
 
-
-    if (stopsName.includes(getStopName(dataStops, arretfinal))) {
-      stop_sequence_finale = getStopsequence(stopswithsequence, getStopName(dataStops, arretfinal))
-    }
-
-    if (stop_sequence_finale >= 0 && stopsName.some(stop => arretsDepartName.includes(stop))) {
-      const commonArrets = stopsName.filter(stop => arretsDepartName.includes(stop));
-      var commonArrets1 = convertCommonNameToId(commonArrets, arretsDepartName, arretsDepart)
-      var commonArrets2 = convertCommonNameToId(commonArrets, stopsName, stopsId)
-
-
-          var commonArretsFinal1 = []
-          var commonArretsFinal2 = []
-          
-          for (const arret of commonArrets) {
-            if (parseInt(getStopsequence(stopswithsequenceSDepart, arret)) > parseInt(stopsequenceDepart)) {
-              commonArretsFinal1.push(commonArrets1[commonArrets.indexOf(arret)])
-              commonArretsFinal2.push(commonArrets2[commonArrets.indexOf(arret)])
-            }
-          }
-
-
-          if (commonArretsFinal1.length > 0) {
-            if (parseInt(stop_sequence_finale) >= parseInt(getStopsequence(stopswithsequence, getStopName(dataStops, commonArretsFinal2[0])))) {
+      const stopswithsequence = getListArretStaticWithSequence(tripId);
+      const stopsName = getListArretStaticName(tripId);
+      var stop_sequence_finale = -1
+      if (stopsName.includes(getStopName(dataStops, arretfinal)) && stopsName.some(stop => arretsDepartName.includes(stop))) {
+        stop_sequence_finale = getStopsequence(stopswithsequence, getStopName(dataStops, arretfinal))
+        const commonArrets = stopsName.filter(stop => arretsDepartName.includes(stop));
+        var commonArrets1 = convertCommonNameToId(commonArrets, arretsDepartName, arretsDepart)
+        var commonArrets2 = convertCommonNameToId(commonArrets, stopsName, stopsId)
+        const commonArretsFinal1 = commonArrets.map(arret => commonArrets1[commonArrets.indexOf(arret)]).filter((_, index) => parseInt(getStopsequence(stopswithsequenceSDepart, commonArrets[index])) > parseInt(stopsequenceDepart));
+        const commonArretsFinal2 = commonArrets.map(arret => commonArrets2[commonArrets.indexOf(arret)]).filter((_, index) => parseInt(getStopsequence(stopswithsequenceSDepart, commonArrets[index])) > parseInt(stopsequenceDepart));
+        if (commonArretsFinal1.length > 0) {
+          if (parseInt(stop_sequence_finale) >= parseInt(getStopsequence(stopswithsequence, getStopName(dataStops, commonArretsFinal2[0])))) {
 
             const heureArriveeTrip1 = heureToDateTime(getHeureArrivee(tripIdDepart, commonArretsFinal1[0]));
             const heureDepartTrip2 = heureToDateTime(getHeureDepart(tripId, commonArretsFinal2[0]));
 
             if (heureDepartTrip2.getTime() > heureArriveeTrip1.getTime() && heureDepartTrip2.getTime() < heureArriveeTrip1.getTime() + decalage30) {
-            console.log("tripId",tripId)
-            console.log("commonArrets name", commonArrets)
-            console.log("commonArrets", commonArretsFinal1, commonArretsFinal2)
-            console.log("heurearrivee", heureArriveeTrip1)
-            console.log("heuredepart", heureDepartTrip2)
-            console.log("heureArriveeFin",heureArriveeFin)
-            console.log("heureDepartInit",heureDepartInit)
-            console.log("commonArrets2[0]",commonArrets2[0])
-            console.log("stop_sequence_commonArrets2[0]",getStopsequence(stopswithsequence, getStopName(dataStops, commonArrets2[0])))
-            console.log("stop_sequence_finale",stop_sequence_finale)
-            console.log("")
-            const fin = stopsId[(stopsName.indexOf(getStopName(dataStops, arretfinal)))]
-            trips.push([tripId, getCommonArretInfo(tripIdDepart, tripId, commonArretsFinal1, commonArretsFinal2), fin]);
-          }
 
+              const fin = stopsId[(stopsName.indexOf(getStopName(dataStops, arretfinal)))]
+              trips.push([tripId, getCommonArretInfo(tripIdDepart, tripId, commonArretsFinal1, commonArretsFinal2), fin]);
+            }
+
+          }
         }
       }
     }
+
+
   }
-}
   return trips;
 }
 
