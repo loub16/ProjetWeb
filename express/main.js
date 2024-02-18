@@ -1,5 +1,9 @@
  //Variables
  var selectedDate = new Date();
+ var idTripB;
+ var idTripT;
+ var arretB;
+ var arretT;
 document.addEventListener('DOMContentLoaded', async () => {
     //set the minimum date of the calendar to the current date
     const currentDate = new Date().toISOString().split('T')[0];
@@ -16,14 +20,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('date').textContent = formatDate(new Date());
     document.getElementById('heureCours').textContent = lastLessonHour;
 
-
     // Get the date input element
     const dateInput = document.getElementById('calendar');
 
     // Add a 'change' event listener to the date input
     dateInput.addEventListener('change', function() {
         (async () => {
-            const selectedDate = dateInput.value;
+            selectedDate = dateInput.value;
             const [firstday, lastday] = getFirstAndLastDayOfAnyWeek(selectedDate);
             const edt = await fetchEdt(id, firstday, lastday);
             const parts = selectedDate.split('-');
@@ -42,6 +45,59 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         })();    
     });
+
+    // Search bar and autocompletion
+    const responseArrets = await fetch('http://localhost:3000/getAllArretName');
+    const data = await responseArrets.json();
+    const searchInputB = document.getElementById('searchInputB');
+    const autocompleteContainerB = document.getElementById('autocompleteContainerB');
+    const searchInputT = document.getElementById('searchInputT');
+    const autocompleteContainerT = document.getElementById('autocompleteContainerT');
+
+    // Event listener for input changes
+    searchInputB.addEventListener('input', function() {
+        const inputValue = this.value;
+        const filteredData = filterData(inputValue);
+        displaySuggestions(filteredData, autocompleteContainerB);
+    });
+    
+    // Event delegation for selecting suggestion
+    autocompleteContainerB.addEventListener('click', function(event) {
+        const clickedElement = event.target;
+        if (clickedElement.classList.contains('suggestion')) {
+            searchInputB.value = clickedElement.textContent;
+            fetchTrajet('B');
+            autocompleteContainerB.innerHTML = ''; // Clear autocomplete suggestions
+        }
+    });
+
+    // Event listener for input changes
+    searchInputT.addEventListener('input', function() {
+        const inputValue = this.value;
+        const filteredData = filterData(inputValue);
+        displaySuggestions(filteredData, autocompleteContainerT);
+    });
+    
+    // Event delegation for selecting suggestion
+    autocompleteContainerT.addEventListener('click', function(event) {
+        const clickedElement = event.target;
+        if (clickedElement.classList.contains('suggestion')) {
+            searchInputT.value = clickedElement.textContent;
+            fetchTrajet('T');
+            autocompleteContainerT.innerHTML = ''; // Clear autocomplete suggestions
+        }
+    });
+    
+    // Function to filter data based on user input
+    function filterData(input) {
+        return data.filter(item => item.toLowerCase().includes(input.toLowerCase()));
+    }
+
+    // Function to display autocomplete suggestions
+    function displaySuggestions(suggestions, autocompleteContainer) {
+        const html = suggestions.map(suggestion => `<div class="suggestion">${suggestion}</div>`).join('');
+        autocompleteContainer.innerHTML = html;
+    }
 });
 
 
@@ -150,9 +206,10 @@ function getFormattedDate() {
  */
 function dateToTimestamp(date,time) {
     const dateTime = new Date();
-    dateTime.setFullYear(date.getFullYear());
-    dateTime.setMonth(date.getMonth());
-    dateTime.setDate(date.getDate());
+    dateSplit = date.split('-');
+    dateTime.setFullYear(dateSplit[0]);
+    dateTime.setMonth(dateSplit[1]);
+    dateTime.setDate(dateSplit[2]);
     timeSplit = time.split(':');
     dateTime.setHours(timeSplit[0]);
     dateTime.setMinutes(timeSplit[1]);
@@ -169,7 +226,6 @@ function dateToTimestamp(date,time) {
  */
 async function fetchTransport(arret, lessonHour){
     try {
-        //arret = (transport === "bus") ? "NDAMELAC" : "1BEAU";
         const response = await fetch('http://localhost:3000/getTransport?arret=' + arret + '&heure=' + dateToTimestamp(selectedDate,lessonHour));
         const bus = await response.json();
         return bus;
@@ -186,16 +242,20 @@ function getBusHour(transport){
     
     var busTime2 = 0;
     var busTime6 = 0;
+    var idTrip2;
+    var idTrip6;
     for (var key in transport) {
         if (transport.hasOwnProperty(key)) {
             if ((busTime2 == 0 || busTime2 > transport[key].arrival) && transport[key].routeId == "02" ) {
                 busTime2 = transport[key].arrival;
+                idTrip2 = transport[key].tripId;
             }else if((busTime6 == 0 || busTime6 > transport[key].arrival) && transport[key].routeId == "06"){
                 busTime6 = transport[key].arrival;
+                idTrip6 = transport[key].tripId;
             }
         }
     }
-    return [busTime2,busTime6];
+    return [busTime2,busTime6,idTrip2,idTrip6];
 }
 
 /** Get the next tram of line B and C
@@ -206,17 +266,21 @@ function getTramHour(transport){
     
     var tramTimeB = 0;
     var tramTimeC = 0;
+    var idTripB;
+    var idTripC;
     for (var key in transport) {
         if (transport.hasOwnProperty(key)) {
             if ((tramTimeB == 0 || tramTimeB > transport[key].arrival) && transport[key].routeId == "B") {
                 tramTimeB = transport[key].arrival;
+                idTripB = transport[key].tripId;
             }else if((tramTimeC == 0 || tramTimeC > transport[key].arrival) && transport[key].routeId == "C"){
                 tramTimeC = transport[key].arrival;
+                idTripC = transport[key].tripId;
             }
         }
     }
 
-    return [tramTimeB,tramTimeC];
+    return [tramTimeB,tramTimeC,idTripB,idTripC];
 }
 
 
@@ -295,30 +359,83 @@ function ajoutMenuSens(ligne){
  * @param {String} sens direction of the route
  */
 async function setTransportHour(sens){
-    if(sens == 'SB' || sens == 'BA'){
-        const bus = await fetchTransport("NDAMELAC",document.getElementById('heureCours').textContent);
-        const busHour = getBusHour(bus);
-        const arretHour = sens == 'SB' ? busHour[0] : busHour[1];
-        document.getElementById('heureBus').textContent = arretHour;
-        document.getElementById('text1').removeAttribute("hidden");
-    }else if(sens == 'BS' || sens == 'AB'){
-        const bus = await fetchTransport("NDAMLA-E",document.getElementById('heureCours').textContent);
+    if(sens == 'BS' || sens == 'BA'){
+        arretB = "NDAMELAC";
+        const bus = await fetchTransport(arretB,document.getElementById('heureCours').textContent);
         const busHour = getBusHour(bus);
         const arretHour = sens == 'BS' ? busHour[0] : busHour[1];
+        idTripB = sens == 'BS'? busHour[2] : busHour[3];
         document.getElementById('heureBus').textContent = arretHour;
         document.getElementById('text1').removeAttribute("hidden");
+        document.getElementById('destinationB').removeAttribute("hidden");
+        document.getElementById('searchInputB').removeAttribute("hidden");
+    }else if(sens == 'SB' || sens == 'AB'){
+        arretB = "NDAMLA-E";
+        const bus = await fetchTransport(arretB,document.getElementById('heureCours').textContent);
+        const busHour = getBusHour(bus);
+        const arretHour = sens == 'SB' ? busHour[0] : busHour[1];
+        idTripB = sens == 'SB'? busHour[2] : busHour[3];
+        document.getElementById('heureBus').textContent = arretHour;
+        document.getElementById('text1').removeAttribute("hidden");
+        document.getElementById('destinationB').removeAttribute("hidden");
+        document.getElementById('searchInputB').removeAttribute("hidden");
     }else if(sens == 'BR' || sens == 'BM'){
-        const tram = await fetchTransport("1BEAU",document.getElementById('heureCours').textContent);
+        arretT = "1BEAU";
+        const tram = await fetchTransport(arretT,document.getElementById('heureCours').textContent);
         const tramHour = getTramHour(tram);
         const arretHour = sens == 'BM' ? tramHour[0] : tramHour[1];
+        idTripT = sens == 'BM'? tramHour[2] : tramHour[3];
         document.getElementById('heureTram').textContent = arretHour;
         document.getElementById('text2').removeAttribute("hidden");
+        document.getElementById('destinationT').removeAttribute("hidden");
+        document.getElementById('searchInputT').removeAttribute("hidden");
     }else if(sens == 'RB' || sens == 'MB'){
-        const tram = await fetchTransport("2BEAU",document.getElementById('heureCours').textContent);
+        arretT = "2BEAU";
+        const tram = await fetchTransport(arretT,document.getElementById('heureCours').textContent);
         const tramHour = getTramHour(tram);
         const arretHour = sens == 'MB' ? tramHour[0] : tramHour[1];
+        idTripT = sens == 'MB'? tramHour[2] : tramHour[3];
         document.getElementById('heureTram').textContent = arretHour;
         document.getElementById('text2').removeAttribute("hidden");
+        document.getElementById('destinationT').removeAttribute("hidden");
+        document.getElementById('searchInputT').removeAttribute("hidden");
     }
     
+}
+
+async function fetchTrajet(transport){
+    const destination = transport == "B" ? document.getElementById('searchInputB').value : document.getElementById('searchInputT').value;
+    const idTrip = transport == "B" ? idTripB : idTripT;
+    const arret = transport == "B" ? arretB : arretT;
+    const response = await fetch("http://localhost:3000/getTrajet?idTrip=" + idTrip + "&arretName=" + destination + "&arretinitial=" + arret);
+    const trajet = await response.json();
+    const withCorrespondance = trajet.status.withCorrespondance;
+    if(!withCorrespondance){
+        const heureArrivee = trajet.premier.arret.heure_arrivee[0];
+        switch(transport){
+            case 'B':
+                document.getElementById('heureDestinationB').textContent = heureArrivee;
+                break;
+            case 'T':
+                document.getElementById('heureDestinationT').textContent = heureArrivee;
+                break;
+        }
+    }else{
+        const heureArrivee = trajet.arrivée.heure_arrivee[0];
+        switch(transport){
+            case 'B':
+                document.getElementById('heureDestinationB').textContent = heureArrivee;
+                document.getElementById('correspondanceB').removeAttribute("hidden");
+                document.getElementById('correspondanceB').textContent = "Correspondance à " + trajet.correspondance.arret.arret;
+                document.getElementById('trajetCorresB').removeAttribute("hidden");
+                document.getElementById('trajetCorresB').textContent = "Direction " + trajet.correspondance.trip.trip_headsign + " à " + trajet.correspondance.arret.heure_depart[0];
+            case 'T':
+                document.getElementById('heureDestinationT').textContent = heureArrivee;
+                document.getElementById('correspondanceT').removeAttribute("hidden");
+                document.getElementById('correspondanceT').textContent = "Correspondance à " + trajet.correspondance.arret.arret;
+                document.getElementById('trajetCorresT').removeAttribute("hidden");
+                document.getElementById('trajetCorresT').textContent = "Direction " + trajet.correspondance.trip.trip_headsign + " à " + trajet.correspondance.arret.heure_depart[0];
+                break;
+            }   
+    }
 }

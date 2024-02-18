@@ -76,9 +76,17 @@
                         </select>
                         <br>
                         <select hidden name = "sensB" id = "sensB" onchange="(async ()=>{await setTransportHour(this.value);})()" class="btn btn-white border mt-2 dropdown-toggle"></select>
-                        <br><br>
+                        <!--<br><br>-->
                         <b hidden id="text1" class="green-color">Arrive à</b><br>
                         <span id="heureBus"></span>
+                        <!-- Search bar -->
+                        <input hidden type="text" id="searchInputB" placeholder="Chercher une destination...">
+                        <!-- Autocomplete suggestions -->
+                        <div id="autocompleteContainerB"></div>
+                        <b hidden id="correspondanceB" class="green-color"></b><br>
+                        <b hidden id="trajetCorresB"></b><br>
+                        <b hidden id="destinationB" class="green-color">Heure d'arrivé à la destination</b><br>
+                        <span id="heureDestinationB"></span>
                         
                 </div>
             </div>
@@ -103,6 +111,14 @@
                         <br><br>
                         <b hidden id="text2" class="green-color">Arrive à</b><br>
                         <span id="heureTram"></span>
+                        <!-- Search bar -->
+                        <input hidden type="text" id="searchInputT" placeholder="Chercher une destination...">
+                        <!-- Autocomplete suggestions -->
+                        <div id="autocompleteContainerT"></div>
+                        <b hidden id="correspondanceT" class="green-color"></b><br>
+                        <b hidden id="trajetCorresT"></b><br>
+                        <b hidden id="destinationT" class="green-color">Heure d'arrivé à la destination</b><br>
+                        <span id="heureDestinationT"></span>
                         
                 </div>
             </div>
