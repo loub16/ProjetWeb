@@ -9,6 +9,10 @@ Pour installer les dépendances :
 
 ```npm i puppeteer```
 
+```npm install -g convert-csv-to-json```
+
+```npm install convert-csv-to-json --save```
+
 S'assurer qu'il y a bien le répertoire C:/Users/[usrname]/.cache/puppeteer
 
 S'il y a l'erreur suivante :
