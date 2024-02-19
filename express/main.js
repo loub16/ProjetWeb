@@ -1,5 +1,5 @@
  //Variables
- var selectedDate = new Date();
+ var selectedDate = dateToString(new Date());
  var idTripB;
  var idTripT;
  var arretB;
@@ -205,6 +205,7 @@ function getFormattedDate() {
  * @returns timestamp (int)
  */
 function dateToTimestamp(date,time) {
+    console.log("date : " + date);
     const dateTime = new Date();
     dateSplit = date.split('-');
     dateTime.setFullYear(dateSplit[0]);
@@ -438,4 +439,12 @@ async function fetchTrajet(transport){
                 break;
             }   
     }
+}
+
+function dateToString(date){
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
 }
