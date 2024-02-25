@@ -21,6 +21,9 @@ Pour la partie front et la partie graphique nous nous sommes servi de bootstrap
 ## Bugs/problèmes connus
 Si il y a une correspondance le temps de calcul du trajet est très long
 
+## Démo
+Une vidéo de démo est disponible dans le dossier demo
+
 ## Installation
 /!\ node version>=20.5.0
 
