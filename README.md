@@ -2,27 +2,25 @@
 
 ## Description
 
-Le but d'EdtTransport est de synchroniser les emplois du temps universitaires avec les horaires des bus et tramways d'Angers. Les utilisateurs se connectent en utilisant leurs identifiants et mots de passe universitaires. Après avoir choisi une date, l'heure de fin des cours s'affiche. Ensuite, ils peuvent sélectionner une ligne de bus ou de tram ainsi que sa direction, et l'heure d'arrivée à l'arrêt prédéfini est affichée. Enfin, en choisissant un arrêt d'arrivée, le site présente l'heure d'arrivée finale ainsi que les correspondances, le cas échéant.
+Le but d'EdTransport est de synchroniser les emplois du temps universitaires avec les horaires des bus et tramways d'Angers. Les utilisateurs se connectent en utilisant leurs identifiants et mots de passe universitaires. Après avoir choisi une date, l'heure de fin des cours s'affiche. Ensuite, ils peuvent sélectionner une ligne de bus ou de tram ainsi que sa direction, et l'heure d'arrivée à l'arrêt prédéfini est affichée. Enfin, en choisissant un arrêt d'arrivée, le site présente l'heure d'arrivée finale ainsi que les correspondances, le cas échéant.
 
 ## Membres
 Lou Benier: Partie front
 Pierre Portron: Partie back, gestion de l'emploi du temps et front
-Yohann Conanec: Partie Back, récupération des transport et des trajets
+Yohann Conanec: Partie Back, récupération des transports et des trajets
 
 
 ## Technologies utilisées
-Pour la partie serveur du site nous utilisons node.js et express.js
+Pour la partie serveur du site, nous utilisons node.js et express.js.
 
-Pour la récupérations des transports et des trajets nous utilisons les API d'irigo, en versions static ou temps réel dépendemment de l'heure.
-Dans le cas de l'API temps rééls nous utilisons gtfs-realtime-bindings afin de pouvoir manipuler plus facilement les données en temps réél.
+Pour la récupération des transports et des trajets, nous utilisons les API d'irigo, en versions statique ou temps réel dépendamment de l'heure. Dans le cas de l'API temps réel, nous utilisons gtfs-realtime-bindings afin de pouvoir manipuler plus facilement les données en temps réel.
 
-Pour la partie front et la partie graphique nous nous sommes servi de bootstrap
+Pour la partie front et la partie graphique, nous nous sommes servis de bootstrap.
 
 ## Bugs/problèmes connus
-Si il y a une correspondance le temps de calcul du trajet est très long
-
+S'il y a une correspondance, le temps de calcul du trajet est très long.
 ## Démo
-Une vidéo de démo est disponible dans le dossier demo
+Une vidéo de démo est disponible dans le dossier demo.
 
 ## Installation
 /!\ node version>=20.5.0
